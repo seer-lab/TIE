@@ -1,0 +1,92 @@
+JavaPathfinder v4.1 - (C) 1999-2007 RIACS/NASA Ames Research Center
+
+
+====================================================== system under test
+application: BankRaceCondition\TestAccount.java
+
+====================================================== search started: 12/7/09 4:15 PM
+
+====================================================== error #1
+gov.nasa.jpf.tools.RaceDetector
+potential field race: BankRaceCondition.Account@274.balance
+
+====================================================== trace #1
+------------------------------------------------------ transition #0 thread: 0
+gov.nasa.jpf.jvm.choice.ThreadChoiceFromSet {>main}
+      [2678 insn w/o sources]
+  BankRaceCondition\TestAccount.java:17 : Account x = new Account(100);
+  BankRaceCondition\Account.java:6 : public Account(int initial_value){
+      [1 insn w/o sources]
+  BankRaceCondition\Account.java:4 : int balance = 0;
+  BankRaceCondition\Account.java:7 : this.balance = initial_value;
+  BankRaceCondition\Account.java:8 : }
+  BankRaceCondition\TestAccount.java:17 : Account x = new Account(100);
+  BankRaceCondition\TestAccount.java:19 : Transactions t1 = new Transactions();
+  BankRaceCondition\TestAccount.java:6 : private static class Transactions extends Thread{
+      [190 insn w/o sources]
+  BankRaceCondition\TestAccount.java:6 : private static class Transactions extends Thread{
+  BankRaceCondition\TestAccount.java:19 : Transactions t1 = new Transactions();
+  BankRaceCondition\TestAccount.java:20 : Transactions t2 = new Transactions();
+  BankRaceCondition\TestAccount.java:6 : private static class Transactions extends Thread{
+      [143 insn w/o sources]
+  BankRaceCondition\TestAccount.java:6 : private static class Transactions extends Thread{
+  BankRaceCondition\TestAccount.java:20 : Transactions t2 = new Transactions();
+  BankRaceCondition\TestAccount.java:22 : t1.x = x;
+  BankRaceCondition\TestAccount.java:23 : t2.x = x;
+  BankRaceCondition\TestAccount.java:26 : t1.start();
+  BankRaceCondition\TestAccount.java:27 : t2.start();
+  BankRaceCondition\TestAccount.java:30 : t1.join();
+------------------------------------------------------ transition #1 thread: 0
+gov.nasa.jpf.jvm.choice.ThreadChoiceFromSet {>main,Thread-0,Thread-1}
+  BankRaceCondition\TestAccount.java:30 : t1.join();
+      [6 insn w/o sources]
+------------------------------------------------------ transition #2 thread: 1
+gov.nasa.jpf.jvm.choice.ThreadChoiceFromSet {>Thread-0,Thread-1}
+  BankRaceCondition\TestAccount.java:10 : x.deposit(10);
+------------------------------------------------------ transition #3 thread: 1
+gov.nasa.jpf.jvm.choice.ThreadChoiceFromSet {>Thread-0,Thread-1}
+  BankRaceCondition\TestAccount.java:10 : x.deposit(10);
+  BankRaceCondition\Account.java:11 : this.balance += amount;
+------------------------------------------------------ transition #4 thread: 1
+gov.nasa.jpf.jvm.choice.ThreadChoiceFromSet {>Thread-0,Thread-1}
+  BankRaceCondition\Account.java:11 : this.balance += amount;
+------------------------------------------------------ transition #5 thread: 1
+gov.nasa.jpf.jvm.choice.ThreadChoiceFromSet {>Thread-0,Thread-1}
+  BankRaceCondition\Account.java:11 : this.balance += amount;
+  BankRaceCondition\Account.java:12 : }
+  BankRaceCondition\TestAccount.java:11 : x.withdraw(10);
+------------------------------------------------------ transition #6 thread: 1
+gov.nasa.jpf.jvm.choice.ThreadChoiceFromSet {>Thread-0,Thread-1}
+  BankRaceCondition\TestAccount.java:11 : x.withdraw(10);
+  BankRaceCondition\Account.java:15 : this.balance -= amount;
+------------------------------------------------------ transition #7 thread: 1
+gov.nasa.jpf.jvm.choice.ThreadChoiceFromSet {>Thread-0,Thread-1}
+  BankRaceCondition\Account.java:15 : this.balance -= amount;
+------------------------------------------------------ transition #8 thread: 1
+gov.nasa.jpf.jvm.choice.ThreadChoiceFromSet {>Thread-0,Thread-1}
+  BankRaceCondition\Account.java:15 : this.balance -= amount;
+  BankRaceCondition\Account.java:16 : }
+  BankRaceCondition\TestAccount.java:12 : }
+------------------------------------------------------ transition #9 thread: 0
+gov.nasa.jpf.jvm.choice.ThreadChoiceFromSet {>main,Thread-1}
+      [5 insn w/o sources]
+  BankRaceCondition\TestAccount.java:31 : t2.join();
+------------------------------------------------------ transition #10 thread: 2
+gov.nasa.jpf.jvm.choice.ThreadChoiceFromSet {main,>Thread-1}
+  BankRaceCondition\TestAccount.java:10 : x.deposit(10);
+------------------------------------------------------ transition #11 thread: 2
+gov.nasa.jpf.jvm.choice.ThreadChoiceFromSet {main,>Thread-1}
+  BankRaceCondition\TestAccount.java:10 : x.deposit(10);
+  BankRaceCondition\Account.java:11 : this.balance += amount;
+
+====================================================== snapshot #1
+thread index=0,name=main,status=RUNNING,this=java.lang.Thread@0,target=null,priority=5,lockCount=0
+  blocked on: BankRaceCondition.TestAccount$Transactions@302
+  call stack:
+	at BankRaceCondition.TestAccount.main(TestAccount.java:31)
+
+thread index=2,name=Thread-1,status=RUNNING,this=BankRaceCondition.TestAccount$Transactions@302,priority=5,lockCount=0
+  call stack:
+	at BankRaceCondition.Account.deposit(Account.java:11)
+	at BankRaceCondition.TestAccount$Transactions.run(TestAccount.java:10)
+

@@ -1,0 +1,9 @@
+<?xml version="1.0" ?>
+<jpfreport>
+  <platform>
+    <hostname>ubuntu</hostname>
+    <arch>amd64/2</arch>
+    <os>Linux/2.6.32-21-generic</os>
+    <java>Sun Microsystems Inc./1.6.0_18</java>
+  </platform>
+</jpfreport>

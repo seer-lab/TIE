@@ -1,0 +1,67 @@
+JavaPathfinder v4.1 - (C) 1999-2007 RIACS/NASA Ames Research Center
+
+
+====================================================== system under test
+application: Racer.java
+
+====================================================== search started: 12/7/09 9:51 PM
+
+====================================================== error #1
+gov.nasa.jpf.jvm.NoUncaughtExceptionsProperty
+java.lang.ArithmeticException: division by zero
+	at Racer.main(Racer.java:16)
+
+
+====================================================== snapshot #1
+no live threads
+
+====================================================== trace #1
+------------------------------------------------------ transition #0 thread: 0
+gov.nasa.jpf.jvm.choice.ThreadChoiceFromSet {>main}
+      [2678 insn w/o sources]
+  Racer.java:11                  : Racer racer = new Racer();
+  Racer.java:1                   : public class Racer implements Runnable {
+      [1 insn w/o sources]
+  Racer.java:3                   : int d = 42;
+  Racer.java:1                   : public class Racer implements Runnable {
+  Racer.java:11                  : Racer racer = new Racer();
+  Racer.java:12                  : Thread t = new Thread(racer);
+      [189 insn w/o sources]
+  Racer.java:12                  : Thread t = new Thread(racer);
+  Racer.java:13                  : t.start();
+  Racer.java:15                  : doSomething(1000);                   // (3)
+  Racer.java:22                  : try { Thread.sleep(n); } catch (InterruptedException ix) {}
+      [4 insn w/o sources]
+  Racer.java:22                  : try { Thread.sleep(n); } catch (InterruptedException ix) {}
+  Racer.java:23                  : }
+  Racer.java:16                  : int c = 420 / racer.d;               // (4)
+------------------------------------------------------ transition #1 thread: 1
+gov.nasa.jpf.jvm.choice.ThreadChoiceFromSet {main,>Thread-0}
+  Racer.java:6                   : doSomething(1001);                   // (1)
+  Racer.java:22                  : try { Thread.sleep(n); } catch (InterruptedException ix) {}
+      [4 insn w/o sources]
+  Racer.java:22                  : try { Thread.sleep(n); } catch (InterruptedException ix) {}
+  Racer.java:23                  : }
+  Racer.java:7                   : d = 0;                               // (2)
+------------------------------------------------------ transition #2 thread: 1
+gov.nasa.jpf.jvm.choice.ThreadChoiceFromSet {main,>Thread-0}
+  Racer.java:7                   : d = 0;                               // (2)
+  Racer.java:8                   : }
+------------------------------------------------------ transition #3 thread: 0
+gov.nasa.jpf.jvm.choice.ThreadChoiceFromSet {>main}
+  Racer.java:16                  : int c = 420 / racer.d;               // (4)
+
+====================================================== results
+error #1: gov.nasa.jpf.jvm.NoUncaughtExceptionsProperty "java.lang.ArithmeticException: division by zero  a..."
+
+====================================================== statistics
+elapsed time:       0:00:00
+states:             new=7, visited=1, backtracked=4, end=2
+search:             maxDepth=3, constraints=0
+choice generators:  thread=6, data=0
+heap:               gc=8, new=285, free=32
+instructions:       2949
+max memory:         4MB
+loaded code:        classes=72, methods=1007
+
+====================================================== search finished: 12/7/09 9:51 PM
