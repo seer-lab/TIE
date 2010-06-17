@@ -1,8 +1,12 @@
-package streamGUI;
+package gov.nasa.jpf.gVisualizer;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
+
+import javax.swing.UIManager;
+import javax.swing.UnsupportedLookAndFeelException;
+
 import gov.nasa.jpf.*;
 import gov.nasa.jpf.Error;
 import gov.nasa.jpf.jvm.ChoiceGenerator;
@@ -37,7 +41,7 @@ public class JPFVisualization extends ListenerAdapter{
 		
 	  // This array is to keep track of the different program files used
 	  private static List<String> programFileNames = new ArrayList<String>();
-	  private PaintTopGUIStream test;
+	  private CreateMainGUI testSkele;
 	  
 	  public JPFVisualization (Config conf, JPF jpf) {
 		    this.conf = conf;
@@ -77,6 +81,27 @@ public class JPFVisualization extends ListenerAdapter{
 	   * This method initializes certain methods and constants
 	   */
 	  public void searchStarted (Search search){
+		  
+		  /*
+		    try {
+			    // Set System L&F
+		        UIManager.setLookAndFeel(
+		            UIManager.getSystemLookAndFeelClassName());
+		    } 
+		    catch (UnsupportedLookAndFeelException e) {
+		       // handle exception
+		    }
+		    catch (ClassNotFoundException e) {
+		       // handle exception
+		    }
+		    catch (InstantiationException e) {
+		       // handle exception
+		    }
+		    catch (IllegalAccessException e) {
+		       // handle exception
+		    }
+
+		  */
 	     System.out.println("\n\nSTARTED\n\n");
 	  }
 	  
@@ -87,6 +112,9 @@ public class JPFVisualization extends ListenerAdapter{
 		  
 		     boolean showInfo = false;
 		     System.out.println("\n\nFINISHED\n\n");
+		     
+		     //set progress bar off
+		     testSkele.setProgressOff();
 		     
 		     if(showInfo){
 			 System.out.println("Thread Count: " + thread_Num);
@@ -209,16 +237,27 @@ public class JPFVisualization extends ListenerAdapter{
           }
          
           // insert number of transitions in this path 
-          transition_Num.add(transNum + 1);		  
+          transition_Num.add(transNum + 1); 
+         
+          // error info being put into the transition states
+          transition_states.get(transitionId).add(0);
+          transition_states_info.get(transitionId).add(errorDetails);
 
-		  
+          // we add +1 to the number of the transitions to include the last error transition 
+          transition_Num.set(transitionId, transition_Num.get(transitionId) + 1);
+          
+          //System.out.println("\n\n0. Start");
+          
+          
 		  // Top GUI
-          if(transitionId == 0){
-        	  test = new PaintTopGUIStream(trace_Num, (thread_Num + 1), transition_Num, transition_states, transition_states_info, transition_states_error);
+          if(transitionId == 0){ 	  
+        	  testSkele = new CreateMainGUI(trace_Num, (thread_Num + 1), transition_Num, transition_states, transition_states_info, transition_states_error, programFileNames);
           }else{
         	  //System.out.println("transitionId: " + transitionId);
-        	  test.setValues(trace_Num, (thread_Num + 1), transition_Num, transition_states, transition_states_info, transition_states_error);
-        	  test.repaint();
+      		 // System.out.println(transition_states);
+        	  testSkele.reDrawAllFrames(trace_Num, transition_Num, transition_states, transition_states_info, transition_states_error);  
+        	  //testSkele.pack();
+        	  
           }
           
        //   for(long i = 0; i < 100000000; i++){
