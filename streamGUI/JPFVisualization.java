@@ -47,10 +47,7 @@ public class JPFVisualization extends ListenerAdapter{
 		    this.conf = conf;
 		    this.jpf = jpf;
 		    search = jpf.getSearch();
-		    vm = jpf.getVM();
-		    
-		    	    
-		    
+		    vm = jpf.getVM();    		    
 	  }
 	  
 	  //--- the listener interface that drives report generation
@@ -82,7 +79,7 @@ public class JPFVisualization extends ListenerAdapter{
 	   */
 	  public void searchStarted (Search search){
 		  
-		  /*
+		  
 		    try {
 			    // Set System L&F
 		        UIManager.setLookAndFeel(
@@ -101,7 +98,7 @@ public class JPFVisualization extends ListenerAdapter{
 		       // handle exception
 		    }
 
-		  */
+		  
 	     System.out.println("\n\nSTARTED\n\n");
 	  }
 	  
@@ -117,26 +114,26 @@ public class JPFVisualization extends ListenerAdapter{
 		     testSkele.setProgressOff();
 		     
 		     if(showInfo){
-			 System.out.println("Thread Count: " + thread_Num);
-			 System.out.println("Trace Count: " + trace_Num);
+		    	 System.out.println("Thread Count: " + thread_Num);
+		    	 System.out.println("Trace Count: " + trace_Num);
 			 
-			 //information verification
+		    	 //information verification
 			 
-			 System.out.println("\n\t-XXXXXXXXXXXXXXXXXXXXXXXX- Inforamation Verification -XXXXXXXXXXXXXXXXXXXXXXXX-\n");
-			 for(int i = 0; i < transition_Num.size(); i++){
-				 System.out.println("Schedule: " + i + " ---> Size: " + transition_Num.get(i));
+		    	 System.out.println("\n\t-XXXXXXXXXXXXXXXXXXXXXXXX- Inforamation Verification -XXXXXXXXXXXXXXXXXXXXXXXX-\n");
+		    	 for(int i = 0; i < transition_Num.size(); i++){
+		    		 System.out.println("Schedule: " + i + " ---> Size: " + transition_Num.get(i));
 				 
 				 
-				 // information on transitions
-				 for(int j = 0; j < transition_states.get(i).size(); j++){
-					 System.out.println("------------------  Transition #" + j + ": " + transition_states.get(i).get(j));
-					 System.out.println(transition_states_info.get(i).get(j));
-				 }
+		    		 // information on transitions
+		    		 for(int j = 0; j < transition_states.get(i).size(); j++){
+		    			 System.out.println("------------------  Transition #" + j + ": " + transition_states.get(i).get(j));
+		    			 System.out.println(transition_states_info.get(i).get(j));
+		    		 }
 				 
-				 // error info
-				 System.out.println("\n" + transition_states_error.get(i));
+		    		 // error info
+		    		 System.out.println("\n" + transition_states_error.get(i));
 				 
-			 }
+		    	 }
 			 }
 			 
 			 

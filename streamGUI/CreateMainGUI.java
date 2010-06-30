@@ -17,6 +17,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Vector;
 import java.util.regex.Matcher;
@@ -47,15 +48,28 @@ import javax.swing.text.Highlighter;
 
 public class CreateMainGUI extends JFrame{
 	
-	// variables that store information on current JPF Run
+	// variables that store information on current data values of the JPF Run
 	private static int trace_Num =0;
 	private static int thread_Num=0;
-	private static List<Integer> transition_Num = new ArrayList<Integer>();
-	private List<List<Integer>> transition_states_color = new ArrayList<List<Integer>>();
-	private List<List<Integer>> transition_states_ours = new ArrayList<List<Integer>>();
-	private List<String> transition_errors = new ArrayList<String>();
-	private List<List<String>> transition_states_info_ours = new ArrayList<List<String>>();
 	private List<String> programFileNames_ours = new ArrayList<String>();
+	private List<List<Integer>> transition_states_color = new ArrayList<List<Integer>>();
+	
+	private List<String> transition_errors_cur = new ArrayList<String>();
+	private List<List<String>> transition_states_info_cur = new ArrayList<List<String>>();
+	private List<List<Integer>> transition_states_cur = new ArrayList<List<Integer>>();
+	private static List<Integer> transition_Num_cur = new ArrayList<Integer>();
+	
+	// variables that store information on the original data values of the JPF Run
+	private List<String> transition_errors_org = new ArrayList<String>();
+	private List<List<String>> transition_states_info_org = new ArrayList<List<String>>();
+	private List<List<Integer>> transition_states_org = new ArrayList<List<Integer>>();
+	private static List<Integer> transition_Num_org = new ArrayList<Integer>();
+	
+	// variables that store information based on a ascending sort
+	private List<String> transition_errors_asc = new ArrayList<String>();
+	private List<List<String>> transition_states_info_asc = new ArrayList<List<String>>();
+	private List<List<Integer>> transition_states_asc = new ArrayList<List<Integer>>();
+	private static List<Integer> transition_Num_asc = new ArrayList<Integer>();
 	
 	// variables hold colors and highlighting colors for the different threads
 	private Color[] threadColor;
@@ -158,24 +172,28 @@ public class CreateMainGUI extends JFrame{
 	private Timer timer;
 	private JLabel timerLbl;
 	
+	// Misc.
+	private boolean firstTimeAscSort = true;
+	private int ascClicks = 0;
+	
     public CreateMainGUI(int trace_Num, int thread_Num, List<Integer> transition_Num, List<List<Integer>> transition_states, List<List<String>> transition_states_info, List<String> transition_states_error, List<String> programFileNames){	
 		/*
 		 * Initialize the passed in variables
 		 */
 		this.trace_Num = trace_Num;
 		this.thread_Num = thread_Num;
-		this.transition_Num = transition_Num;
+		this.transition_Num_cur = transition_Num;
 		
-		this.transition_states_ours = transition_states;
-		this.transition_errors = transition_states_error;		
+		this.transition_states_cur = transition_states;
+		this.transition_errors_cur = transition_states_error;		
 		this.programFileNames_ours.clear();
 		this.programFileNames_ours = programFileNames;
 		
 		this.transition_states_color.clear();
 		this.transition_states_color = transition_states;
 		
-		this.transition_states_info_ours.clear();
-		this.transition_states_info_ours = transition_states_info;
+		this.transition_states_info_cur.clear();
+		this.transition_states_info_cur = transition_states_info;
 		transitionInfoPos = new int[1000][2];
 		
         // Get the default toolkit
@@ -264,13 +282,16 @@ public class CreateMainGUI extends JFrame{
         // Define and add two drop down menu to the menubar
         JMenu fileMenu = new JMenu("File");
         JMenu editMenu = new JMenu("Edit");
+        JMenu sortMenu = new JMenu("Sort");
         menuBar.add(fileMenu);
         menuBar.add(editMenu);
+        menuBar.add(sortMenu);
      
         // File Menu Options
         JMenuItem exitAction = new JMenuItem("Exit");
         JMenuItem openAction = new JMenuItem("Open");
         JMenuItem highlightOffAction = new JCheckBoxMenuItem("Highlight Other Code");
+        JMenuItem ascendingSort = new JCheckBoxMenuItem("Ascending");
           
         // open Menu Option
         openAction.addActionListener(
@@ -308,9 +329,58 @@ public class CreateMainGUI extends JFrame{
        		 }
        );
         
+        // ascendingSort Menu Option
+        ascendingSort.addActionListener(
+          		 new ActionListener() {
+           			 public void actionPerformed(ActionEvent e) {	
+           				 			 
+           				 // sort 
+           				 if(firstTimeAscSort){
+           					
+           					for(int i = 0; i < transition_errors_cur.size(); i++ ){
+           						transition_errors_org.add("");
+           						transition_Num_org.add(0);
+           						transition_states_org.add(new ArrayList<Integer>());
+           						transition_states_info_org.add(new ArrayList<String>());
+           					}
+           					
+           					 // set the original ordering of the data
+           					Collections.copy(transition_errors_org, transition_errors_cur);
+           					Collections.copy(transition_Num_org, transition_Num_cur);
+           					Collections.copy(transition_states_org, transition_states_cur);
+           					Collections.copy(transition_states_info_org, transition_states_info_cur);
+           					
+           					// sort
+           					sortAscending();
+           					firstTimeAscSort = false;
+           				 }
+           				 
+           				 
+        				// turn off top panel highlights and clear left panel buttons
+           				leftPanel.removeAll();
+           				leftPanel.repaint();
+           				topPaint.setHighlightOff();
+           				stepThroughCurrentSched.setText("Schedule: N/A");
+           				stepThroughCurrentTransition.setText("Transition: N/A");
+           					
+           				ascClicks++;
+           				if(ascClicks % 2 == 0){
+           					// set new values for original data values
+           					reDrawAllFrames(trace_Num, transition_Num_org, transition_states_org, transition_states_info_org, transition_errors_org);
+           				}
+           				else{
+           					// set new values for ascending sort
+           					reDrawAllFrames(trace_Num, transition_Num_asc, transition_states_asc, transition_states_info_asc, transition_errors_asc);
+           				}
+
+           			 }
+           		 }
+        );
+        
         fileMenu.add(openAction);
         fileMenu.add(exitAction);
         editMenu.add(highlightOffAction);
+        sortMenu.add(ascendingSort);
     }
     
     /*
@@ -321,7 +391,7 @@ public class CreateMainGUI extends JFrame{
 		topScrollDim.height = scrnsize.height / 3;
 		topScrollDim.width = scrnsize.width;
 		
-		topPaint = new TopGUIPanel(trace_Num, thread_Num, transition_Num, transition_states_ours, topScrollDim);
+		topPaint = new TopGUIPanel(trace_Num, thread_Num, transition_Num_cur, transition_states_cur, topScrollDim);
 		topPaint.setPreferredSize(topScrollDim);
 		
 		topPaint.addMouseListener( new MouseAdapter() {
@@ -417,25 +487,29 @@ public class CreateMainGUI extends JFrame{
 			
 		
 		  // Adding buttons for each transition (add '+ 1' for the error button)
-		  JButton[] threadButton = new JButton[transition_Num.get(j)];
+		  JButton[] threadButton = new JButton[transition_Num_cur.get(j)];
 		 // System.out.println(j + " --> Size: " + transition_Num.get(j));
-		  for(int i = 0; i < transition_Num.get(j); i++){
+		  for(int i = 0; i < transition_Num_cur.get(j); i++){
 			threadButton[i] = new JButton("Col: " + j + "x Row: " + i );
 			leftPanelBtns.get(j).add(new JButton("Col: " + j + "x Row: " + i ));
 		  }
 		
-		  for(int i=0; i < transition_states_ours.get(j).size(); i++){
-		     final String info = transition_states_info_ours.get(j).get(i);
+		  for(int i=0; i < transition_states_cur.get(j).size(); i++){
+		     final String info = transition_states_info_cur.get(j).get(i);
 
 		     c.gridx = 0;
 		     c.gridy = i;
 		   
-		     state = transition_states_ours.get(j).get(i);	     
+		     state = transition_states_cur.get(j).get(i);	     
 		     leftPanelBtns.get(j).get(i).setText("" + i );
 		     leftPanelBtns.get(j).get(i).setName("" + i);
 		     leftPanelBtns.get(j).get(i).setBackground(threadColor[state]);
 		     leftPanelBtns.get(j).get(i).setForeground(Color.BLACK);
 		     leftPanelBtns.get(j).get(i).setFont(font);
+		     // look and feel
+		     leftPanelBtns.get(j).get(i).setContentAreaFilled(false);
+		     leftPanelBtns.get(j).get(i).setOpaque(true);
+		     
 		     curTrace = j;
 		     
 		     // when you press these buttons on the left, transition info will be displayed at the bottom
@@ -567,10 +641,15 @@ public class CreateMainGUI extends JFrame{
 		  leftPanelBtns.get(j).get(lastBtn).setBackground(Color.GRAY);
 		  leftPanelBtns.get(j).get(lastBtn).setForeground(Color.BLACK);
 		  
+		  // look and feel
+		  leftPanelBtns.get(j).get(lastBtn).setContentAreaFilled(false);
+		  leftPanelBtns.get(j).get(lastBtn).setOpaque(true);
+		  
+		  
 		  leftPanelBtns.get(j).get(lastBtn).addActionListener(
 				  new ActionListener() {
 					  public void actionPerformed(ActionEvent e) {
-						  transitions.setText(transition_errors.get(curTrace));
+						  transitions.setText(transition_errors_cur.get(curTrace));
 					  }
 				  }
 			);
@@ -738,9 +817,8 @@ public class CreateMainGUI extends JFrame{
                 TitledBorder.CENTER,
                 TitledBorder.BELOW_TOP);
 		stepThroughMainLbl.setTitleColor(Color.black);
-        
-		Font curFont = stepThroughMainLbl.getTitleFont();
-		stepThroughMainLbl.setTitleFont(new Font(curFont.getFontName(), curFont.getStyle(), 18));
+   
+		stepThroughMainLbl.setTitleFont(font);
         
         stepThroughPane.setBorder(stepThroughMainLbl);
         
@@ -837,11 +915,15 @@ public class CreateMainGUI extends JFrame{
         centerEastPane.setOneTouchExpandable(true);
         centerEastPane.setDividerLocation(scrnsize.width / 2);
 
+        
+        // bottom panel addition        
         mainCenterSplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT, centerEastPane, stepThroughPane);
         mainCenterSplit.setFocusable(false);
         mainCenterSplit.setOneTouchExpandable(true);
-        mainCenterSplit.setDividerLocation(scrnsize.height / 2);
+        mainCenterSplit.setDividerLocation((int)(scrnsize.height / 2));
         mainCenterSplit.setEnabled(false);
+        
+       // System.out.println("Height: " +(int)(scrnsize.height / 1.3));
         
     }
     
@@ -892,7 +974,7 @@ public class CreateMainGUI extends JFrame{
 			        			
 			        			if(trans != 0){
 			        				trans--;
-			        				String prevTransInfo = transition_states_info_ours.get(sched).get(trans);
+			        				String prevTransInfo = transition_states_info_cur.get(sched).get(trans);
 			        			    String[] lines = prevTransInfo.split("[\n\r]");
 			        			    if(lines.length <= 1){
 			        			    	tranistionInfoPos = -1;
@@ -916,7 +998,7 @@ public class CreateMainGUI extends JFrame{
     
     
     
-    /* ---------------------------------------- Frame Redraw Methods ----------------------------------------*/
+    /* ------------------------------------------ Frame Redraw Methods -----------------------------------------*/
     
     /*
      * This Method calls other Methods to redraw all of the Frames
@@ -928,11 +1010,11 @@ public class CreateMainGUI extends JFrame{
 		 */
 		this.trace_Num = trace_Num;
 		this.thread_Num = thread_Num;
-		this.transition_Num = transition_Num;
-		this.transition_states_ours = transition_states;
-		this.transition_errors = transition_states_error;		
+		this.transition_Num_cur = transition_Num;
+		this.transition_states_cur = transition_states;
+		this.transition_errors_cur = transition_states_error;		
 		this.transition_states_color = transition_states;
-		this.transition_states_info_ours = transition_states_info;
+		this.transition_states_info_cur = transition_states_info;
 		//transitionInfoPos = new int[this.trace_Num][2];
     	
 		// redraw top frame
@@ -948,7 +1030,7 @@ public class CreateMainGUI extends JFrame{
      * a new schedule is done
      */
     public void reDrawTopFrame(){
-    	topPaint.setValues(trace_Num, transition_Num, transition_states_ours);
+    	topPaint.setValues(trace_Num, transition_Num_cur, transition_states_cur);
     	topPaint.repaint();
     }
     
@@ -1009,11 +1091,11 @@ public class CreateMainGUI extends JFrame{
 	 */
 	public void findAllTransitionInfo(int row, int col){
 		transitionInfoPos_size = -1;
-		String matchInfo = transition_states_info_ours.get(row).get(col);
+		String matchInfo = transition_states_info_cur.get(row).get(col);
 		
-		for(int i = 0; i < transition_states_info_ours.size(); i++){
-			for(int j = 0; j < transition_states_info_ours.get(i).size(); j++){				
-				if( matchInfo.equals(transition_states_info_ours.get(i).get(j))){
+		for(int i = 0; i < transition_states_info_cur.size(); i++){
+			for(int j = 0; j < transition_states_info_cur.get(i).size(); j++){				
+				if( matchInfo.equals(transition_states_info_cur.get(i).get(j))){
 					transitionInfoPos_size++;	
 					transitionInfoPos[transitionInfoPos_size][0] = i;
 					transitionInfoPos[transitionInfoPos_size][1] = j;	
@@ -1033,35 +1115,35 @@ public class CreateMainGUI extends JFrame{
 	 */
 	public void genThreadColors(){
 		
-		genColors[0] = new Color(58,98,132); // blue
+		genColors[0] = new Color(0,121,173); // blue
 		threadHighlighter[0] = new DefaultHighlighter.DefaultHighlightPainter( genColors[0].brighter());
 		
-		genColors[1] = new Color(51,157,70); // green
-		threadHighlighter[1] = new DefaultHighlighter.DefaultHighlightPainter( genColors[1].brighter());
+		genColors[1] = new Color(226,123,182); // pink
+		threadHighlighter[1] = new DefaultHighlighter.DefaultHighlightPainter( genColors[1].brighter() );
 		
-		genColors[2] = new Color(255,127,50); // orange
+		genColors[2] = new Color(51,157,70); // green
 		threadHighlighter[2] = new DefaultHighlighter.DefaultHighlightPainter( genColors[2].brighter());
 		
 		genColors[3] = new Color(145,105,171); // purple
 		threadHighlighter[3] = new DefaultHighlighter.DefaultHighlightPainter( genColors[3].brighter());
 		
-		genColors[4] = new Color(136,89,79); // brown
+		genColors[4] = new Color(255,127,50); // orange
 		threadHighlighter[4] = new DefaultHighlighter.DefaultHighlightPainter( genColors[4].brighter());
 		
-		genColors[5] = new Color(226,123,182); // pink
-		threadHighlighter[5] = new DefaultHighlighter.DefaultHighlightPainter( genColors[5].brighter() );
+		genColors[5] = new Color(136,89,79); // brown
+		threadHighlighter[5] = new DefaultHighlighter.DefaultHighlightPainter( genColors[5].brighter());
 		
-		genColors[6] = new Color(88,88,88); // grey
+		genColors[6] = new Color(84,143,174); // teal
 		threadHighlighter[6] = new DefaultHighlighter.DefaultHighlightPainter( genColors[6].brighter() );
 		
-		genColors[7] = new Color(84,143,174); // teal
+		genColors[7] = new Color(88,88,88); // grey
 		threadHighlighter[7] = new DefaultHighlighter.DefaultHighlightPainter( genColors[7].brighter() );
-		
+			
 		genColors[8] = new Color(191,186,57); // gold
 		threadHighlighter[8] = new DefaultHighlighter.DefaultHighlightPainter( genColors[8].brighter() );
 		
 		genColors[9] = new Color(1,71,189); // royal blue
-		threadHighlighter[9] = new DefaultHighlighter.DefaultHighlightPainter( genColors[9] );
+		threadHighlighter[9] = new DefaultHighlighter.DefaultHighlightPainter( genColors[9].brighter() );
 	}
 	
 	/*
@@ -1074,6 +1156,88 @@ public class CreateMainGUI extends JFrame{
 		progressBar.setValue(1000);
 		timer.stop();
 	}
+	
+	/* ---------------------------------------- Sort Functionality ----------------------------------------*/
+	
+	/*
+	 * This method sorts the visualization data in
+	 * ascending order by the number of transitions
+	 * - Lets use Bubble Sort for now
+	 */
+	public void sortAscending(){
+		// start by getting the values
+		for(int i = 0; i < transition_errors_cur.size(); i++ ){
+					transition_errors_asc.add("");
+					transition_Num_asc.add(0);
+					transition_states_asc.add(new ArrayList<Integer>());
+					transition_states_info_asc.add(new ArrayList<String>());
+		}
+				
+		// copy original ordering of the data
+		Collections.copy(transition_errors_asc, transition_errors_cur);
+		Collections.copy(transition_Num_asc, transition_Num_cur);
+		Collections.copy(transition_states_asc, transition_states_cur);
+		Collections.copy(transition_states_info_asc, transition_states_info_cur);
+		
+		// Print the List before the sort
+		/*
+		System.out.print("Not Sorted: ");
+		for(int i = 0; i < transition_Num_asc.size(); i++){
+			System.out.print(transition_Num_asc.get(i) + ", " );
+			
+		}
+		System.out.println("\n");
+		*/
+		
+		// sort algorithm
+		boolean notSorted = true;
+		while(notSorted){
+			
+			notSorted = false;
+			for(int i = 0; i < transition_Num_asc.size() - 1; i++){
+				if(transition_Num_asc.get(i) > transition_Num_asc.get(i+1)){
+					
+					// switch transition Numbers
+					int temp = transition_Num_asc.get(i);
+					transition_Num_asc.set(i, transition_Num_asc.get(i+1));
+					transition_Num_asc.set(i+1, temp);
+					notSorted = true;
+					
+					// switch transition info
+					List<Integer> tempStates = transition_states_asc.get(i);
+					transition_states_asc.set(i, transition_states_asc.get(i+1));
+					transition_states_asc.set(i+1, tempStates);
+					
+					// switch transition info states
+					List<String> tempStatesInfo = transition_states_info_asc.get(i);
+					transition_states_info_asc.set(i, transition_states_info_asc.get(i+1));
+					transition_states_info_asc.set(i+1, tempStatesInfo);
+					
+					// switch transition errors
+					String tempErrs = transition_errors_asc.get(i);
+					transition_errors_asc.set(i, transition_errors_asc.get(i+1));
+					transition_errors_asc.set(i+1, tempErrs);
+				}
+				
+			}
+			
+		}
 
+		
+		
+		// Print the List after the sort
+		/*
+		System.out.print("Sorted: ");
+		for(int i = 0; i < transition_Num_asc.size(); i++){
+			System.out.print(transition_Num_asc.get(i) + ", " );
+			
+		}
+		System.out.println("\n");
+		*/
+		
+	}
+	
+	
+	
 }
 

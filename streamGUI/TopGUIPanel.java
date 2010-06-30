@@ -56,6 +56,9 @@ public class TopGUIPanel extends JPanel{
 	// colors
 	private Color[] genColors;
 	private Color[] threadColor ;
+	private Color specHighlight = new Color(213,22,50);
+	private Color massHighLight = new Color(191,186,57,200); // gold
+	private Color whiteBorder = new Color(255,255,255,125);
 	
 	// When a certain column is highlighted, we need to darken the colour with this constant
 	private int colorInc = 100;
@@ -122,7 +125,7 @@ public class TopGUIPanel extends JPanel{
         
 		// initializing the square height
 		sq_width = (int)(topDim.width/ traceNum);
-		sq_height = (int)(topDim.height / max_Transitions + 1);
+		sq_height = (int)(topDim.height / max_Transitions);
 
 	}
 	
@@ -163,6 +166,7 @@ public class TopGUIPanel extends JPanel{
 				   	g.fillRect(x, y, sq_width, sq_height);
 			     }
 			     
+
 			     
 			     // specific highlight
 			     if(highlight){
@@ -195,10 +199,10 @@ public class TopGUIPanel extends JPanel{
 			    		 for(int z = 0; z < otherHighlight_ours.length; z++){
 			    		 	if(j == otherHighlight_ours[z][0]  && i == otherHighlight_ours[z][1]){
 				    		 	 			    		  
-						     	g.setColor(Color.yellow);
+						     	g.setColor(massHighLight);
 						     	// g.setColor(threadColor[threadNum]);
-						     	g.fillOval(x, y, sq_width, sq_height);
-						     	//g.drawRect(x, y, sq_width, sq_height);
+						     //	g.fillOval(x, y, sq_width, sq_height);
+						     	g.fillRect(x, y, sq_width, sq_height);
 				    	 	}
 			    		 
 			    	 	}
@@ -206,12 +210,9 @@ public class TopGUIPanel extends JPanel{
 			    	 
 			    	 
 			    	 if(j == highlight_x  && i == highlight_y){
-			    		 g.setColor(Color.RED);	 
-					     g.fillRect(x, y, sq_width, sq_height);
-			    		  
-			    	     // g.setColor(threadColor[threadNum]);
-			    	      //g.fillOval(x, y, sq_width, sq_height);
-			    	      //g.drawRect(x, y, sq_width, sq_height);
+			    		 g.setColor(specHighlight);	 
+			    		 g.fillOval(x, y, sq_width, sq_height);
+					     //g.fillRect(x, y, sq_width, sq_height);
 			    	 }
 			    	 
 			     }
@@ -220,16 +221,14 @@ public class TopGUIPanel extends JPanel{
 			
 			// drawing the borders
 		  
-		   	if(j == highlight_x || (j-1) == highlight_x && highlight){
+		   	if((j == highlight_x || (j-1) == highlight_x) && highlight){
 		   		g.setColor(Color.RED);
 				g.drawLine(x, 0, x, max_Transitions*sq_height);
 		   	}else{
-			   g.setColor(Color.WHITE);
+			   g.setColor(whiteBorder);
 			   g.drawLine(x, 0, x, max_Transitions*sq_height);
 		   	}
 
-
-			 
 		  }
     }
     
@@ -305,15 +304,22 @@ public class TopGUIPanel extends JPanel{
 	 * - We are not using red because it is the high lighter color
 	 */
 	public void genThreadColors(){
-		genColors[0] = new Color(58,98,132); // blue
-		genColors[1] = new Color(51,157,70); // green
-		genColors[2] = new Color(255,127,50); // orange
+		genColors[0] = new Color(0,121,173); // blue
+		genColors[1] = new Color(191,99,130); // pink
+		genColors[2] = new Color(51,157,70); // green
 		genColors[3] = new Color(145,105,171); // purple
-		genColors[4] = new Color(136,89,79); // brown
-		genColors[5] = new Color(226,123,182); // pink
-		genColors[6] = new Color(88,88,88); // grey
-		genColors[7] = new Color(84,143,174); // teal
-		genColors[8] = new Color(191,186,57); // gold
+		genColors[4] = new Color(255,158,84); // orange		
+		genColors[5] = new Color(136,89,79); // brown
+		genColors[6] = new Color(84,143,174); // teal
+		genColors[7] = new Color(88,88,88); // grey
+		genColors[8] = new Color(191,186,57,200); // gold
 		genColors[9] = new Color(1,71,189); // royalblue
+	}
+	
+	/*
+	 * this method turns off the specific highlight off
+	 */
+	public void setHighlightOff(){
+		highlight = false;
 	}
 }
