@@ -206,7 +206,7 @@ public class CreateMainGUI extends JFrame{
 		loweredbevel = BorderFactory.createLoweredBevelBorder();
 		compoundBorderRaised = BorderFactory.createCompoundBorder(
 				BorderFactory.createMatteBorder(
-		                10, 5, 10, 5, Color.black), raisedbevel);
+		                10, 5, 10, 5, Color.WHITE), raisedbevel);
 
 		compoundBorderLowered = BorderFactory.createCompoundBorder(
 				BorderFactory.createMatteBorder(
@@ -442,7 +442,8 @@ public class CreateMainGUI extends JFrame{
 		leftPanel.setLayout(new GridLayout(150, 1));
 		leftPanel.setBackground(Color.white);
 		                
-		leftPanel.setBorder(compoundBorderRaised);
+		//leftPanel.setBorder(compoundBorderRaised);
+		leftPanel.setBorder(blackline);
 		
 		// Left Panel Label
 		leftPanelLabel = new JLabel("", JLabel.CENTER);
