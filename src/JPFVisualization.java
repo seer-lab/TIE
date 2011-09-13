@@ -78,6 +78,7 @@ public class JPFVisualization extends ListenerAdapter{
 	   * This method initializes certain methods and constants
 	   */
 	  public void searchStarted (Search search){
+		 
 		  
 		  
 		    try {
@@ -136,7 +137,10 @@ public class JPFVisualization extends ListenerAdapter{
 		    	 }
 			 }
 			 
-			 
+		     
+		     // sorting purposes: copies original list
+		     testSkele.copyOrginalSchedule();
+		     testSkele.calculateThreadErrors();
 	  }
 	  
 	  public void searchConstraintHit(Search search){
@@ -244,7 +248,6 @@ public class JPFVisualization extends ListenerAdapter{
           transition_Num.set(transitionId, transition_Num.get(transitionId) + 1);
           
           //System.out.println("\n\n0. Start");
-          
           
 		  // Top GUI
           if(transitionId == 0){ 	  

@@ -1,4 +1,4 @@
-package Backups;
+package gov.nasa.jpf.gVisualizer;
 
 
 import java.awt.BorderLayout;
@@ -18,6 +18,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.Vector;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -31,7 +33,7 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.border.Border;
 
-public class PaintTopGUIBackUp11 extends JPanel{
+public class TopGUIPanel extends JPanel{
 	
 	// to generate random numbers
 	private Dimension scrnsize;
@@ -39,13 +41,14 @@ public class PaintTopGUIBackUp11 extends JPanel{
 	private int sq_width;
     private int max_Transitions;
 	private final int y_offset = 0;
-	private List<Integer> transition_Num;
+	private List<Integer> transitionNum;
 	private List<List<Integer>> transition_states;
-	private List<List<String>> transition_states_info;
-	private int trace_Num;
-	private int thread_Num;
+	private List<String> transition_states_error;
+	
+	private int traceNum;
+	private int threadNum;
 	private Dimension topDim;
-	private Graphics gCopy;
+	private Dimension scrollDim;
 	
 	// highlight vlaues
 	private boolean highlight = false;
@@ -57,93 +60,142 @@ public class PaintTopGUIBackUp11 extends JPanel{
 	// colors
 	private Color[] genColors;
 	private Color[] threadColor ;
+	private Color specHighlight = new Color(213,22,50);
+	private Color massHighLight = new Color(191,186,57,200); // gold
+	private Color whiteBorder = new Color(255,255,255,125);
 	
 	// When a certain column is highlighted, we need to darken the colour with this constant
 	private int colorInc = 100;
 	private boolean MenuHighlight = false;
+	private JPanel topPanel;
 	
+	private String errorType;
 	
     
-	public PaintTopGUIBackUp11(int trace_Num, int thread_Num, List<Integer> transition_Num, List<List<Integer>> transition_states, List<List<String>> transition_states_info, List<String> transition_states_error){
-
-		this.transition_Num = transition_Num;
-		this.transition_states = transition_states;
-		this.transition_states_info = transition_states_info;
-		this.trace_Num = trace_Num;
-		this.thread_Num = thread_Num;
+	public TopGUIPanel(int trace_Num, int thread_Num, List<Integer> transition_Num, List<List<Integer>> transition_states, Dimension topScrollDim, List<String> transition_states_error){
+		this.topDim = topScrollDim;
 		
-		// get max transitions
-		max_Transitions = 0;
-		for(int i=0; i < transition_Num.size(); i++){
-            if(transition_Num.get(i) > max_Transitions){
-            	max_Transitions = transition_Num.get(i);
-            }
-	    }
-		
-		// Get the current screen size
-		Toolkit toolkit = Toolkit.getDefaultToolkit();
-		scrnsize = toolkit.getScreenSize();
-		scrnsize.width = scrnsize.width;
-		scrnsize.height = scrnsize.height - 20;
-		
-        JPanel topPanel = new JPanel();
+        topPanel = new JPanel();
         topPanel.setLayout(null);
         
-        topPanel.setBackground(Color.WHITE);
-        topPanel.setVisible(true);
-      
-        topDim = new Dimension();
-        topDim.height = scrnsize.height / 3;
-        topDim.width = scrnsize.width;
         topPanel.setBackground(Color.white);
-        
-		// initializing the square height
-		sq_width = (int)(topDim.width / trace_Num);
-		sq_height = (int)(topDim.height / max_Transitions);
+        topPanel.setVisible(true);
 		
-        this.add(topPanel);
+        //System.out.println("3. TopPaint Constructor");
+		  
+		// Defining a Color to each thread
+        genColors = new Color[10];
+        genThreadColors();
+		threadColor = new Color[thread_Num];
+	    for (int i=0; i < thread_Num; i++){						
+			 // assign colors
+			 threadColor[i] = genColors[i];
+		 }	
+        
+		// set the values
+		this.setValues(trace_Num, transition_Num, transition_states, transition_states_error);
+       
+		this.add(topPanel);
         this.setSize(topDim);
         this.setVisible(true);
 
 	}
 	
+	/*
+	 * 
+	 */
+	public void setValues(int trace_Num, List<Integer> transition_Num, List<List<Integer>> transition_states, List<String> transition_states_error){
+		this.transitionNum = transition_Num;
+		this.transition_states = transition_states;
+		this.traceNum = trace_Num;
+		this.transition_states_error = transition_states_error;
+		
+		//System.out.println("4.0 - TopPaint SetValues");
+		
+		// get max transitions
+		max_Transitions = 0;
+		for(int i=0; i < transitionNum.size(); i++){
+            if(transitionNum.get(i) > max_Transitions){
+            	max_Transitions = transition_Num.get(i);
+            }
+	    }
+		
+
+		//System.out.println(transition_states.toString());
+		
+		// Get the current screen size
+	/*	Toolkit toolkit = Toolkit.getDefaultToolkit();
+		scrnsize = toolkit.getScreenSize();
+		scrnsize.width = scrnsize.width;
+		scrnsize.height = scrnsize.height - 20;
+		*/
+        
+		// initializing the square height
+		sq_width = (int)(topDim.width/ traceNum);
+		sq_height = (int)(topDim.height / max_Transitions);
+
+	}
 	
-    public void paint(Graphics g) {		  
-    	  gCopy = g;
+	/*
+	 * This method draws the schedules
+	 * 
+	 */
+    public void paint(Graphics g) {		
+    	  //System.out.println("4.1 -  TopPaint SetValues");
+    	
 		  g.setColor(Color.WHITE);
-		  g.fillRect(0, 0, scrnsize.width, scrnsize.height);
+		  
+		  g.fillRect(0, 0, this.getSize().width, this.getSize().height);
 		  int y = 0;
 		  int x = 0;
 		  int threadNum = 0;
-		  
-		  
-			// Defining a Color to each thread
-	        genColors = new Color[10];
-	        genThreadColors();
-			Color[] threadColor = new Color[thread_Num];
-		    for (int i=0; i < thread_Num; i++){						
-				 // assign colors
-				 threadColor[i] = genColors[i];
-			 }	
 			
-		  
-		  for(int j = 0; j < trace_Num; j++){
+		    		    
+		  for(int j = 0; j < traceNum; j++){
 			x = j * sq_width;
 			y = y_offset;
 			
+			
 			// coloring the panel
 			for(int i=0; i < transition_states.get(j).size(); i++){
+				//System.out.println( "Trace Number: " + j + " ------> Transition Number: " + i);
+				
 				 y = y_offset + i*sq_height;
 				
 				 threadNum = transition_states.get(j).get(i);
 			     g.setColor(threadColor[threadNum]);
 			     g.fillRect(x, y, sq_width, sq_height);
 			    
-			     // error button
+			     // error button	    
 			     if(i == transition_states.get(j).size() - 1){
 					g.setColor(Color.GRAY);     
 				   	g.fillRect(x, y, sq_width, sq_height);
+				   	
+				   	
+				   	
+				   // Pattern for matching the final error for finding type of bug
+					Pattern endError = Pattern.compile("Error Caught By: (.*)");
+					
+					String[] type = transition_states_error.get(j).split("\n");
+					
+					
+			    	// matcher for final error
+			    	Matcher errorMatch = endError.matcher(type[0]);
+			    	if(errorMatch.matches()){
+			    		//errorMatch.group(2)
+			    		errorType = errorMatch.group(1);
+			    		//System.out.println("found: " + errorMatch.group(1));	
+			    	}
+					
+				   	if(errorType.trim().equals("gov.nasa.jpf.jvm.NotDeadlockedProperty")){
+				   		g.setColor(Color.RED);
+				   		
+				   		g.drawLine(x, y, x+sq_width, y + sq_height);
+				   	}
+				   	
 			     }
+			     
+
 			     
 			     // specific highlight
 			     if(highlight){
@@ -176,10 +228,10 @@ public class PaintTopGUIBackUp11 extends JPanel{
 			    		 for(int z = 0; z < otherHighlight_ours.length; z++){
 			    		 	if(j == otherHighlight_ours[z][0]  && i == otherHighlight_ours[z][1]){
 				    		 	 			    		  
-						     	g.setColor(Color.yellow);
+						     	g.setColor(massHighLight);
 						     	// g.setColor(threadColor[threadNum]);
-						     	g.fillOval(x, y, sq_width, sq_height);
-						     	//g.drawRect(x, y, sq_width, sq_height);
+						     //	g.fillOval(x, y, sq_width, sq_height);
+						     	g.fillRect(x, y, sq_width, sq_height);
 				    	 	}
 			    		 
 			    	 	}
@@ -187,44 +239,25 @@ public class PaintTopGUIBackUp11 extends JPanel{
 			    	 
 			    	 
 			    	 if(j == highlight_x  && i == highlight_y){
-			    		 g.setColor(Color.RED);	 
-					     g.fillRect(x, y, sq_width, sq_height);
-			    		  
-			    	     // g.setColor(threadColor[threadNum]);
-			    	      //g.fillOval(x, y, sq_width, sq_height);
-			    	      //g.drawRect(x, y, sq_width, sq_height);
+			    		 g.setColor(specHighlight);	 
+			    		 g.fillOval(x, y, sq_width, sq_height);
+					     //g.fillRect(x, y, sq_width, sq_height);
 			    	 }
+			    	 
 			     }
 			        
 			}
 			
-			// drawing the error button
-			y = y_offset + transition_states.get(j).size()* sq_height;	  
-
-			
 			// drawing the borders
-		   	if(j == highlight_x || (j-1) == highlight_x && highlight){
+		  
+		   	if((j == highlight_x || (j-1) == highlight_x) && highlight){
 		   		g.setColor(Color.RED);
 				g.drawLine(x, 0, x, max_Transitions*sq_height);
 		   	}else{
-			   g.setColor(Color.WHITE);
+			   g.setColor(whiteBorder);
 			   g.drawLine(x, 0, x, max_Transitions*sq_height);
 		   	}
-			
-			//g.setColor(Color.RED);
-			//g.drawLine(x, 0, x, (transition_states.get(j).size() + 1)*sq_height);
-			
-			//g.setColor(Color.RED);
-			//g.drawLine((j+1) * sq_width, 0, (j+1) * sq_width, transition_states.get(j).size()*sq_height);
-			
-			//g.setColor(Color.ORANGE);
-			//g.drawLine(j * sq_width, transition_states.get(j).size()*sq_height, (j+1) * sq_width, transition_states.get(j).size()*sq_height);
-			
-			//g.setColor(Color.DARK_GRAY); 
-		   	//g.drawLine(x, y, x+sq_width, y+sq_height);
-		   	//g.drawLine(x, y+sq_height, x+sq_width, y);
-		   	
-			 
+
 		  }
     }
     
@@ -233,14 +266,14 @@ public class PaintTopGUIBackUp11 extends JPanel{
 	 */
 	public int getTraceNumber(int x){
 		
-		for (int i = 1; i < trace_Num ; i++){
+		for (int i = 1; i < traceNum ; i++){
 			
 			if((x > (i-1)*sq_width) && (x < i*sq_width)){
 				return (i-1);
 			}
 		}
 		
-		return trace_Num - 1;
+		return traceNum - 1;
 	}
 	
 	/*
@@ -251,7 +284,7 @@ public class PaintTopGUIBackUp11 extends JPanel{
 		for (int i = 1; i < transition_states.get(trace).size(); i++){
 			
 			if((y > (i-1)*sq_height) && (y < i*sq_height)){
-				System.out.println("ROW: " + (i - 1));
+				//System.out.println("ROW: " + (i - 1));
 				return (i-1);
 			}
 		}
@@ -272,13 +305,13 @@ public class PaintTopGUIBackUp11 extends JPanel{
 		if(otherHighlight != null){
 		   otherHighlight_ours = new int[size][2];
 		   for(int i = 0; i < size; i++){
+			 // System.out.println("paintTop i: " + i);
 			  otherHighlight_ours[i][0] = otherHighlight[i][0];
 			  otherHighlight_ours[i][1] = otherHighlight[i][1];
 		   }
 		}
 		
 	}
-	
 	
 	
 	/*
@@ -300,15 +333,22 @@ public class PaintTopGUIBackUp11 extends JPanel{
 	 * - We are not using red because it is the high lighter color
 	 */
 	public void genThreadColors(){
-		genColors[0] = new Color(58,98,132); // blue
-		genColors[1] = new Color(51,157,70); // green
-		genColors[2] = new Color(255,127,50); // orange
+		genColors[0] = new Color(0,121,173); // blue
+		genColors[1] = new Color(191,99,130); // pink
+		genColors[2] = new Color(51,157,70); // green
 		genColors[3] = new Color(145,105,171); // purple
-		genColors[4] = new Color(136,89,79); // brown
-		genColors[5] = new Color(226,123,182); // pink
-		genColors[6] = new Color(88,88,88); // grey
-		genColors[7] = new Color(84,143,174); // teal
-		genColors[8] = new Color(191,186,57); // gold
+		genColors[4] = new Color(255,158,84); // orange		
+		genColors[5] = new Color(136,89,79); // brown
+		genColors[6] = new Color(84,143,174); // teal
+		genColors[7] = new Color(88,88,88); // grey
+		genColors[8] = new Color(191,186,57,200); // gold
 		genColors[9] = new Color(1,71,189); // royalblue
+	}
+	
+	/*
+	 * this method turns off the specific highlight off
+	 */
+	public void setHighlightOff(){
+		highlight = false;
 	}
 }

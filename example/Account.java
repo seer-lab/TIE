@@ -1,4 +1,4 @@
-package BankRaceCondition;
+
 
 public class Account{
 	int balance = 0;
@@ -12,7 +12,7 @@ public class Account{
 	}
 	
 	public void withdraw(int amount){
-		this.balance -= amount;
+			this.balance -= amount;
 	}
 	
 	public int getBalance(){

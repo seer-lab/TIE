@@ -1,0 +1,17 @@
+target=TestAccount
+
+listener=gov.nasa.jpf.listener.PreciseRaceDetector,gov.nasa.jpf.gVisualizer.JPFVisualization
+
+
+report.console.property_violation=error,trace
+search.multiple_errors=true 
+
+#reporting properties
+report.class=gov.nasa.jpf.report.Reporter
+report.publisher=console
+#report.console.class=gov.nasa.jpf.report.ConsolePublisher
+#report.xml.class=gov.nasa.jpf.report.XMLPublisher
+
+# save report to file
+report.console.file=Gowritharan_Test_Report_Console_ACCOUNT.txt
+#report.xml.file=Gowritharan_XML_Report
