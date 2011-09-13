@@ -50,7 +50,14 @@ public class TopGUIPanel extends JPanel{
 	private Dimension topDim;
 	private Dimension scrollDim;
 	
-	// highlight vlaues
+	// filter values
+	private boolean filterOnlySameTransitions = false;
+	private boolean filterSched = false;
+	private boolean filterOnlySameErrorThreads = false;
+    private int firstThreadInError = 0;
+    private int secondThreadInError = 0;
+	
+	// highlight values
 	private boolean highlight = false;
 	private int highlight_x = -1;
 	private int highlight_y = -1;
@@ -155,6 +162,7 @@ public class TopGUIPanel extends JPanel{
 			
 		    		    
 		  for(int j = 0; j < traceNum; j++){
+			filterSched = false;
 			x = j * sq_width;
 			
 			// if we are align'ing the schedules by the bottom, we must take into account the offset of the y coordinate
@@ -165,65 +173,76 @@ public class TopGUIPanel extends JPanel{
 				y_offset= 0;
 			}
 			
-			// coloring the panel
-			for(int i=0; i < transition_states.get(j).size(); i++){
+			// for filtering schedules that do not have that transition
+			if(filterOnlySameTransitions){
+				filterSched = true;
+				for(int z = 0; z < otherHighlight_ours.length;z++){
+					if(otherHighlight_ours[z][0] == j){
+						filterSched = false;
+					}
+				}
+			}
 			
-			//System.out.println( "Trace Number: " + j + " ------> Transition Number: " + i);
-				
-				y = y_offset + i*sq_height;
-				
-				
-				 threadNum = transition_states.get(j).get(i);
-			     g.setColor(threadColor[threadNum]);
-			     g.fillRect(x, y, sq_width, sq_height);
-			    
-			     // error button	    
-			     if(i == transition_states.get(j).size() - 1){
-					g.setColor(Color.GRAY);     
-				   	g.fillRect(x, y, sq_width, sq_height);
-				   	
-				   	
-				   	
-				   // Pattern for matching the final error for finding type of bug
-					Pattern endError = Pattern.compile("Error Caught By: (.*)");
-					
-					String[] type = transition_states_error.get(j).split("\n");
-					
-					
-			    	// matcher for final error
-			    	Matcher errorMatch = endError.matcher(type[0]);
-			    	if(errorMatch.matches()){
-			    		//errorMatch.group(2)
-			    		errorType = errorMatch.group(1);
-			    		//System.out.println("found: " + errorMatch.group(1));	
-			    	}
-					
-				   	if(errorType.trim().equals("gov.nasa.jpf.jvm.NotDeadlockedProperty")){
-				   		g.setColor(Color.RED);
-				   		
-				   		g.drawLine(x, y, x+sq_width, y + sq_height);
-				   	}
-				   	
-			     }
-			     
+			if(!filterSched){
+				// coloring the panel
+				for(int i=0; i < transition_states.get(j).size(); i++){			
 
-			     
-			     // specific highlight
-			     if(highlight){
-			    	 
-			    	 if(j == highlight_x){
-			    	    Color tempLight = threadColor[threadNum].brighter();
-			    	 
-			    	    g.setColor(tempLight);
-				        g.fillRect(x, y, sq_width, sq_height);
-					    // error button
-				        if(i == transition_states.get(j).size() - 1){
-								g.setColor(Color.GRAY.brighter());     
-							   	g.fillRect(x, y, sq_width, sq_height);
+					y = y_offset + i*sq_height;
+
+					threadNum = transition_states.get(j).get(i);
+					g.setColor(threadColor[threadNum]);
+					g.fillRect(x, y, sq_width, sq_height);
+			    
+					// error button	    
+					if(i == transition_states.get(j).size() - 1){
+						g.setColor(Color.GRAY);     
+						g.fillRect(x, y, sq_width, sq_height);
+
+						// Pattern for matching the final error for finding type of bug
+						Pattern endError = Pattern.compile("Error Caught By: (.*)");
+						String[] type = transition_states_error.get(j).split("\n");
+
+						// matcher for final error
+						Matcher errorMatch = endError.matcher(type[0]);
+						if(errorMatch.matches()){
+							//errorMatch.group(2)
+							errorType = errorMatch.group(1);
+			    			//System.out.println("found: " + errorMatch.group(1));	
 						}
-			    	 }
-			    	 else{
-				    	    Color tempDark = threadColor[threadNum].darker().darker();
+					
+						if(errorType.trim().equals("gov.nasa.jpf.jvm.NotDeadlockedProperty")){
+				   			g.setColor(Color.RED);		
+				   			g.drawLine(x, y, x+sq_width, y + sq_height);
+				   		}
+				   	
+					}
+  
+			     	// specific highlight
+			     	if(highlight){ 
+			    	 	if(j == highlight_x){
+			    	 		Color tempLight = threadColor[threadNum];
+
+			    	    	if(filterOnlySameErrorThreads){
+			    	    		g.setColor(Color.WHITE);
+			    	    		if(firstThreadInError == transition_states.get(j).get(i) || secondThreadInError == transition_states.get(j).get(i)){
+			    	    			g.setColor(tempLight);
+			    	    		}
+			    	    	}
+			    	    	else{
+			    	    		g.setColor(tempLight);
+			    	    	}
+			    	    	
+			    	    	g.fillRect(x, y, sq_width, sq_height);
+			    	    	// error button
+			    	    	if(i == transition_states.get(j).size() - 1){
+								g.setColor(Color.GRAY);     
+							   	g.fillRect(x, y, sq_width, sq_height);
+			    	    	}
+			    	    
+			    	 	}
+			    	 	else{
+				    	   // Color tempDark = threadColor[threadNum].darker().darker();
+			    		  Color tempDark = threadColor[threadNum].darker().darker();
 					    	 
 				    	    g.setColor(tempDark);
 					        g.fillRect(x, y, sq_width, sq_height);
@@ -231,8 +250,8 @@ public class TopGUIPanel extends JPanel{
 					        if(i == transition_states.get(j).size() - 1){
 								g.setColor(Color.GRAY.darker().darker());     
 							   	g.fillRect(x, y, sq_width, sq_height);
-						}
-			    	 }
+					        }
+			    	 	}
 			    	 
 			    	 // highlight similar transitions
 			    	 if(MenuHighlight){
@@ -241,7 +260,7 @@ public class TopGUIPanel extends JPanel{
 				    		 	Color tempLightAll;
 				    		 	
 				    		 	if(i == transition_states.get(j).size() - 1){
-			    		 			tempLightAll = Color.GRAY.brighter();
+			    		 			tempLightAll = Color.GRAY;
 			    		 		}else{
 			    		 			tempLightAll = threadColor[threadNum].brighter();
 			    		 		}
@@ -250,32 +269,32 @@ public class TopGUIPanel extends JPanel{
 						     	// g.setColor(threadColor[threadNum]);
 						     //	g.fillOval(x, y, sq_width, sq_height);
 						     	g.fillRect(x, y, sq_width, sq_height);
-				    	 	}
-			    		 
+				    	 	}	    		 
 			    	 	}
 			    	 }
 			    	 
-			    	 
+			    	 // circle
 			    	 if(j == highlight_x  && i == highlight_y){
-			    		 g.setColor(specHighlight);	 
-			    		 g.fillOval(x, y, sq_width, sq_height);
-					     //g.fillRect(x, y, sq_width, sq_height);
-			    	 }
-			    	 
-			     }
-			        
-			}
+			    		  int small_Width = (int)(0.5*sq_width);
+			    		  int small_Height = (int)(0.5*sq_height);
+			    		  
+			    		  g.setColor(specHighlight);	 
+			    		  g.fillOval(x+((int)(small_Width/2)), y +((int)(small_Height/2)), small_Width, small_Height);
+			    	 	} 
+			     	}    
+			     
+				}
 			
-			// drawing the borders
-		  
-		   	if((j == highlight_x || (j-1) == highlight_x) && highlight){
-		   		g.setColor(Color.RED);
-				g.drawLine(x, 0, x, max_Transitions*sq_height);
-		   	}else{
-			   g.setColor(whiteBorder);
-			   g.drawLine(x, 0, x, max_Transitions*sq_height);
-		   	}
-
+				// drawing the borders
+		   		if((j == highlight_x || (j-1) == highlight_x) && highlight){
+		   			g.setColor(Color.RED);
+		   			g.drawLine(x, 0, x, max_Transitions*sq_height);
+		   		}else{
+		   			g.setColor(whiteBorder);
+		   			g.drawLine(x, 0, x, max_Transitions*sq_height);
+		   		}
+		   
+			}
 		  }
     }
     
@@ -308,7 +327,7 @@ public class TopGUIPanel extends JPanel{
 		}
 		
 		
-		
+		// check if its any of the states besides the last error state
 		for (int i = 1; i < transition_states.get(trace).size(); i++){
 			
 			if((y > (y_offset + (i-1)*sq_height)) && (y < (y_offset + i*sq_height))){
@@ -317,7 +336,13 @@ public class TopGUIPanel extends JPanel{
 			}
 		}
 		
-		return transition_states.get(trace).size() - 1;
+		// check if the last error state is clicked
+		if((y > (y_offset + ( transition_states.get(trace).size()-1)*sq_height)) && (y < (y_offset +  transition_states.get(trace).size()*sq_height))){
+			return transition_states.get(trace).size() - 1;
+		}
+		
+		//return transition_states.get(trace).size() - 1;
+		return -1;
 	}
 	
 	/*
@@ -354,6 +379,23 @@ public class TopGUIPanel extends JPanel{
 		else{
 			this.MenuHighlight = true;
 		}
+	}
+	
+	/*
+	 * Setter Method for Menu Highlight Option
+	 */
+
+	public void setFilterTrans(boolean setOnOff){
+		 this.filterOnlySameTransitions = setOnOff;
+	}
+	
+	/*
+	 * Setter Method for Menu Highlight Option
+	 */
+	public void setFilterErrorThreads(boolean setOnOff, int first, int second){
+		this.filterOnlySameErrorThreads = setOnOff;
+		firstThreadInError = first;
+		secondThreadInError = second;
 	}
 	
 	/*
