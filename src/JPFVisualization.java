@@ -140,7 +140,9 @@ public class JPFVisualization extends ListenerAdapter{
 		     
 		     // sorting purposes: copies original list
 		     testSkele.copyOrginalSchedule();
-		     testSkele.calculateThreadErrors();
+		     
+		     
+		     //testSkele.calculateThreadErrors();
 	  }
 	  
 	  public void searchConstraintHit(Search search){
@@ -232,13 +234,16 @@ public class JPFVisualization extends ListenerAdapter{
                       
               }
               // this is to keep track of what steps of code gets executed at each transition
+              if(copySteps.equals("")){
+            	  copySteps = "JPF has no sources for bytecode executed (Most Likely from an External Library)";
+              }
               transition_states_info.get(transitionId).add(copySteps);
-            // System.out.print(copySteps);
 		      
           }
          
           // insert number of transitions in this path 
           transition_Num.add(transNum + 1); 
+
          
           // error info being put into the transition states
           transition_states.get(transitionId).add(0);

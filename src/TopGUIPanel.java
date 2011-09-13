@@ -40,7 +40,7 @@ public class TopGUIPanel extends JPanel{
 	private int sq_height;
 	private int sq_width;
     private int max_Transitions;
-	private final int y_offset = 0;
+	private int y_offset = 0; // used if we need to align by bottom
 	private List<Integer> transitionNum;
 	private List<List<Integer>> transition_states;
 	private List<String> transition_states_error;
@@ -67,6 +67,9 @@ public class TopGUIPanel extends JPanel{
 	// When a certain column is highlighted, we need to darken the colour with this constant
 	private int colorInc = 100;
 	private boolean MenuHighlight = false;
+	private boolean alignTop = true;
+	private boolean alignBottom = false;
+	
 	private JPanel topPanel;
 	
 	private String errorType;
@@ -153,14 +156,22 @@ public class TopGUIPanel extends JPanel{
 		    		    
 		  for(int j = 0; j < traceNum; j++){
 			x = j * sq_width;
-			y = y_offset;
 			
+			// if we are align'ing the schedules by the bottom, we must take into account the offset of the y coordinate
+			if(alignBottom){
+				y_offset = (max_Transitions - transition_states.get(j).size())*sq_height;
+			}
+			else{
+				y_offset= 0;
+			}
 			
 			// coloring the panel
 			for(int i=0; i < transition_states.get(j).size(); i++){
-				//System.out.println( "Trace Number: " + j + " ------> Transition Number: " + i);
+			
+			//System.out.println( "Trace Number: " + j + " ------> Transition Number: " + i);
 				
-				 y = y_offset + i*sq_height;
+				y = y_offset + i*sq_height;
+				
 				
 				 threadNum = transition_states.get(j).get(i);
 			     g.setColor(threadColor[threadNum]);
@@ -212,13 +223,13 @@ public class TopGUIPanel extends JPanel{
 						}
 			    	 }
 			    	 else{
-				    	    Color tempDark = threadColor[threadNum].darker();
+				    	    Color tempDark = threadColor[threadNum].darker().darker();
 					    	 
 				    	    g.setColor(tempDark);
 					        g.fillRect(x, y, sq_width, sq_height);
 					        // error button
 					        if(i == transition_states.get(j).size() - 1){
-								g.setColor(Color.GRAY.darker());     
+								g.setColor(Color.GRAY.darker().darker());     
 							   	g.fillRect(x, y, sq_width, sq_height);
 						}
 			    	 }
@@ -227,8 +238,15 @@ public class TopGUIPanel extends JPanel{
 			    	 if(MenuHighlight){
 			    		 for(int z = 0; z < otherHighlight_ours.length; z++){
 			    		 	if(j == otherHighlight_ours[z][0]  && i == otherHighlight_ours[z][1]){
-				    		 	 			    		  
-						     	g.setColor(massHighLight);
+				    		 	Color tempLightAll;
+				    		 	
+				    		 	if(i == transition_states.get(j).size() - 1){
+			    		 			tempLightAll = Color.GRAY.brighter();
+			    		 		}else{
+			    		 			tempLightAll = threadColor[threadNum].brighter();
+			    		 		}
+			    		 	
+						     	g.setColor(tempLightAll);
 						     	// g.setColor(threadColor[threadNum]);
 						     //	g.fillOval(x, y, sq_width, sq_height);
 						     	g.fillRect(x, y, sq_width, sq_height);
@@ -280,10 +298,20 @@ public class TopGUIPanel extends JPanel{
 	 * used with mouse listener to get the row (y)
 	 */
 	public int getTransitionNumber(int trace, int y){
+			
+		// if we are align'ing the schedules by the bottom, we must take into account the offset of the y coordinate
+		if(alignBottom){
+			y_offset = (max_Transitions - transition_states.get(trace).size())*sq_height;
+		}
+		else{
+			y_offset= 0;
+		}
+		
+		
 		
 		for (int i = 1; i < transition_states.get(trace).size(); i++){
 			
-			if((y > (i-1)*sq_height) && (y < i*sq_height)){
+			if((y > (y_offset + (i-1)*sq_height)) && (y < (y_offset + i*sq_height))){
 				//System.out.println("ROW: " + (i - 1));
 				return (i-1);
 			}
@@ -350,5 +378,20 @@ public class TopGUIPanel extends JPanel{
 	 */
 	public void setHighlightOff(){
 		highlight = false;
+	}
+	
+	/*
+	 * this method sets the alignment of the top GUI
+	 */
+	public void alignTopOn(boolean x){
+		
+		if(x){
+			alignTop = true;
+			alignBottom = false;
+		}else{
+			alignTop = false;
+			alignBottom = true;
+		}
+		
 	}
 }

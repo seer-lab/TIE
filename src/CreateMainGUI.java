@@ -51,8 +51,8 @@ import javax.swing.text.Highlighter;
 public class CreateMainGUI extends JFrame{
 	
 	// variables that store information on current data values of the JPF Run
-	private static int trace_Num =0;
-	private static int thread_Num=0;
+	private static int trace_Num  = 0;
+	private static int thread_Num = 0;
 	private List<String> programFileNames_ours = new ArrayList<String>();
 	private List<List<Integer>> transition_states_color = new ArrayList<List<Integer>>();
 	
@@ -70,6 +70,16 @@ public class CreateMainGUI extends JFrame{
 	private List<List<Integer>> transition_states_org = new ArrayList<List<Integer>>();
 	private static List<Integer> transition_Num_org = new ArrayList<Integer>();
 	private static List<Integer> realPositions_org = new ArrayList<Integer>();
+	
+	/*
+	// variables that store information temporarily on the original data values of the JPF Run
+	private List<String> transition_errors_org_temp = new ArrayList<String>();
+	private List<String> transition_errorType_org_temp = new ArrayList<String>();
+	private List<List<String>> transition_states_info_org_temp = new ArrayList<List<String>>();
+	private List<List<Integer>> transition_states_org_temp = new ArrayList<List<Integer>>();
+	private static List<Integer> transition_Num_org_temp = new ArrayList<Integer>();
+	private static List<Integer> realPositions_org_temp = new ArrayList<Integer>();
+	*/
 	
 	// variables that store information based on a transition ascending sort
 	private List<String> transition_errors_asc = new ArrayList<String>();
@@ -95,7 +105,7 @@ public class CreateMainGUI extends JFrame{
 	private static List<Integer> transition_Num_bug = new ArrayList<Integer>();
 	private static List<Integer> realPositions_bug = new ArrayList<Integer>();
 	
-	// variables that store information based on similarity sort
+	// variables that store information based on similarity: Classic sort
 	private List<String> transition_errors_sim = new ArrayList<String>();
 	private List<String> transition_errorType_sim = new ArrayList<String>();
 	private List<List<String>> transition_states_info_sim = new ArrayList<List<String>>();
@@ -103,6 +113,16 @@ public class CreateMainGUI extends JFrame{
 	private static List<Integer> transition_Num_sim = new ArrayList<Integer>();
 	private static List<Integer> realPositions_sim = new ArrayList<Integer>();
 	private List<Double> similarity_values = new ArrayList<Double>();
+	
+	// variables that store information based on similarity: Dependant sort
+	private List<String> transition_errors_sim_depend = new ArrayList<String>();
+	private List<String> transition_errorType_sim_depend = new ArrayList<String>();
+	private List<List<String>> transition_states_info_sim_depend = new ArrayList<List<String>>();
+	private List<List<Integer>> transition_states_sim_depend = new ArrayList<List<Integer>>();
+	private static List<Integer> transition_Num_sim_depend = new ArrayList<Integer>();
+	private static List<Integer> realPositions_sim_depend = new ArrayList<Integer>();
+	private List<Double> similarity_depend_values = new ArrayList<Double>();
+	
 	
 	// variables hold colors and highlighting colors for the different threads
 	private Color[] threadColor;
@@ -211,6 +231,7 @@ public class CreateMainGUI extends JFrame{
 	private boolean firstTimeBugSort = true;
 	private JRadioButtonMenuItem sortSimilarity;
 	private ButtonGroup sortGroup;
+	private ButtonGroup alignGroup;
 	
 	// used to cacluate thread error percentage
 	private double[][] threadErrorPercentage;
@@ -303,6 +324,7 @@ public class CreateMainGUI extends JFrame{
 	    this.pack();
 	    this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 	    this.setLocationRelativeTo(null);
+	    this.setExtendedState(this.getExtendedState()|this.MAXIMIZED_BOTH);
 	    this.setVisible(true);
     }
 
@@ -322,10 +344,12 @@ public class CreateMainGUI extends JFrame{
         JMenu fileMenu = new JMenu("File");
         JMenu editMenu = new JMenu("Edit");     
         JMenu sortMenu = new JMenu("Sort");
+        JMenu alignMenu = new JMenu("Align");
         
         menuBar.add(fileMenu);
         menuBar.add(editMenu);
         menuBar.add(sortMenu);
+        menuBar.add(alignMenu);
      
         // File Menu Options
         JMenuItem exitAction = new JMenuItem("Exit");
@@ -339,7 +363,8 @@ public class CreateMainGUI extends JFrame{
         JRadioButtonMenuItem sortBug = new JRadioButtonMenuItem("Bug Type");
         JRadioButtonMenuItem sortTransAsc = new JRadioButtonMenuItem("Transition: Ascending");
         JRadioButtonMenuItem sortTransDesc = new JRadioButtonMenuItem("Transition: Descending");
-        sortSimilarity = new JRadioButtonMenuItem("Similarity"); 
+        JRadioButtonMenuItem sortSimilarityDependant = new JRadioButtonMenuItem("Similarity: Dependant");
+        sortSimilarity = new JRadioButtonMenuItem("Similarity: Classic"); 
         sortSimilarity.setEnabled(false);
         
         sortGroup.add(sortNone);
@@ -347,13 +372,14 @@ public class CreateMainGUI extends JFrame{
         sortGroup.add(sortTransAsc);
         sortGroup.add(sortTransDesc);
         sortGroup.add(sortSimilarity);
+        sortGroup.add(sortSimilarityDependant);
         
         
         // open Menu Option
         openAction.addActionListener(
         		 new ActionListener() {
         			 public void actionPerformed(ActionEvent e) {	
-        			//	 int returnVal = fc.showOpenDialog(temp);
+        				 //int returnVal = fc.showOpenDialog(temp);
         				 
         				// if (returnVal == JFileChooser.APPROVE_OPTION) {
         			//		 temp.dispose();
@@ -491,15 +517,16 @@ public class CreateMainGUI extends JFrame{
            			    sortGroup.clearSelection();
            				
            				Collections.copy(realPositions_cur, realPositions_bug);
-           				
+
            				// redraw frames
            				reDrawAllFrames(trace_Num, transition_Num_bug, transition_states_bug, transition_states_info_bug, transition_errors_bug);
-
+           				
+           			
            			 }
            		 }
         );
         
-        // no sort
+        // Sort Similarity: Classic
         sortSimilarity.addActionListener(
          		 new ActionListener() {
           			 public void actionPerformed(ActionEvent e) {	
@@ -510,7 +537,6 @@ public class CreateMainGUI extends JFrame{
           				    
           			        // get similarity values
          				    genSimilarityValues((realPositions_cur.get(curLeft_rowPos) - 1));
-         				   
          				   
           			        // turn off top panel highlights and clear left panel buttons
             				leftPanel.removeAll();
@@ -552,19 +578,114 @@ public class CreateMainGUI extends JFrame{
            			        // make sure the transition raw data is in teh transition tab
            			        tranistionInfoPos = -1;
            			        leftPanelBtns.get(curLeft_rowPos).get(curLeft_colPos).doClick();
+           			        
            			        topPaint.repaint();
           			 }
           			}
          );
         
+        
+     // Sort Similarity: Classic
+        sortSimilarityDependant.addActionListener(
+         		 new ActionListener() {
+          			 public void actionPerformed(ActionEvent e) {	
+          				    
+         				   
+          			        // turn off top panel highlights and clear left panel buttons
+            				leftPanel.removeAll();
+            				leftPanel.repaint();
+            				topPaint.setHighlightOff();
+            				stepThroughCurrentSched.setText("Schedule: N/A");
+            				stepThroughCurrentTransition.setText("Transition: N/A"); 
+         				    sortSimilarity.setEnabled(false);
+         				    sortGroup.clearSelection();
+            
+         				    sortSimilarityDependant();
+            				
+            				Collections.copy(realPositions_cur, realPositions_sim_depend);
+            				
+            				// redraw frames
+            				// set new values for original data values
+           					reDrawAllFrames(trace_Num, transition_Num_sim_depend, transition_states_sim_depend, transition_states_info_sim_depend, transition_errors_sim_depend);
+           					
+           					/*
+           					curLeft_rowPos = 0;
+           					
+           				  //find all the other occurrences of this transition
+           			    	findAllTransitionInfo(curLeft_rowPos, curLeft_colPos);
+           			    	
+           			    	// highlight the button pressed / all the occurrences of simalar transitions
+           			        topPaint.setHighlight(curLeft_colPos, curLeft_rowPos, transitionInfoPos, transitionInfoPos_size);
+           			        
+           			        
+           			        if(curLeft_colPos >= leftPanelBtns.get(curLeft_rowPos).size()){
+           			        	leftPanelBtns.get(curLeft_rowPos).get(curLeft_colPos).setForeground(Color.RED);
+           			        }else{
+           			        	leftPanelBtns.get(curLeft_rowPos).get(curLeft_colPos).setForeground(Color.RED);
+           			        }
+           			        
+           			        newSchedPressed = true;
+           			        remove(leftPanel, curLeft_rowPos, curLeft_colPos, leftPanelBtns);
+           			        
+           			        
+           			        // make sure the transition raw data is in the transition tab
+           			        tranistionInfoPos = -1;
+           			        leftPanelBtns.get(curLeft_rowPos).get(curLeft_colPos).doClick();
+           			        */
+           			        topPaint.repaint();
+          			 }
+          			}
+         );
+        
+        // Align Menu Tab group
+        
+        alignGroup = new ButtonGroup();
+        
+        JRadioButtonMenuItem alignTop = new JRadioButtonMenuItem("From Top (Default)");
+        alignTop.setSelected(true);  
+        JRadioButtonMenuItem alignBottom = new JRadioButtonMenuItem("From Bottom (by Error)");
+        
+        alignGroup.add(alignTop);
+        alignGroup.add(alignBottom);
+        
+        // default align
+        alignTop.addActionListener(
+        		 new ActionListener() {
+        			 public void actionPerformed(ActionEvent e) {
+        				 topPaint.alignTopOn(true);
+        				 topPaint.repaint();
+        			 }
+        		 });
+        
+        // align from bottom (by error basically)
+        alignBottom.addActionListener(
+         		 new ActionListener() {
+         			 public void actionPerformed(ActionEvent e) {
+         				topPaint.alignTopOn(false);
+         				topPaint.repaint();
+         				
+         			 }
+         		 });
+         		 
+        
+        
+        
+        
+        // add all the items to the Menu Items
         fileMenu.add(openAction);
         fileMenu.add(exitAction);
+        
         editMenu.add(highlightOffAction);
+        
         sortMenu.add(sortNone);
         sortMenu.add(sortBug);
         sortMenu.add(sortTransAsc);
         sortMenu.add(sortTransDesc);
         sortMenu.add(sortSimilarity);
+        sortMenu.add(sortSimilarityDependant);
+        
+        alignMenu.add(alignTop);
+        alignMenu.add(alignBottom);
     }
     
     /*
@@ -585,6 +706,7 @@ public class CreateMainGUI extends JFrame{
 		    	
 		    	// reset the old button highlighted color
 		    	leftPanelBtns.get(curLeft_rowPos).get(curLeft_colPos).setForeground(Color.WHITE);
+		    	leftPanelBtns.get(curLeft_rowPos).get(curLeft_colPos).setBorder(null);
 		    	
 		    	curLeft_rowPos = topPaint.getTraceNumber(e.getX());
 		    	curLeft_colPos = topPaint.getTransitionNumber(curLeft_rowPos, e.getY());
@@ -595,12 +717,14 @@ public class CreateMainGUI extends JFrame{
 		    	// highlight the button pressed / all the occurrences of simalar transitions
 		        topPaint.setHighlight(curLeft_colPos, curLeft_rowPos, transitionInfoPos, transitionInfoPos_size);
 		        
-		        
+		       
 		        if(curLeft_colPos >= leftPanelBtns.get(curLeft_rowPos).size()){
-		        	leftPanelBtns.get(curLeft_rowPos).get(curLeft_colPos).setForeground(Color.RED);
+		        	leftPanelBtns.get(curLeft_rowPos).get(curLeft_colPos).setForeground(Color.WHITE);
 		        }else{
-		        	leftPanelBtns.get(curLeft_rowPos).get(curLeft_colPos).setForeground(Color.RED);
+		        	leftPanelBtns.get(curLeft_rowPos).get(curLeft_colPos).setForeground(Color.WHITE);
 		        }
+		        
+		        
 		        
 		        newSchedPressed = true;
 		        remove(leftPanel, curLeft_rowPos, curLeft_colPos, leftPanelBtns);
@@ -692,7 +816,7 @@ public class CreateMainGUI extends JFrame{
 		     leftPanelBtns.get(j).get(i).setText("" + i );
 		     leftPanelBtns.get(j).get(i).setName("" + i);
 		     leftPanelBtns.get(j).get(i).setBackground(threadColor[state]);
-		     leftPanelBtns.get(j).get(i).setForeground(Color.BLACK);
+		     leftPanelBtns.get(j).get(i).setForeground(Color.WHITE);
 		     leftPanelBtns.get(j).get(i).setFont(font);
 		     // look and feel
 		     leftPanelBtns.get(j).get(i).setContentAreaFilled(false);
@@ -716,7 +840,7 @@ public class CreateMainGUI extends JFrame{
 					        		 final int rowValue = Integer.parseInt(leftPanelLabel.getName());
 					        		 final int colValue = Integer.parseInt(partOne.group(2));
 
-					        	    
+					        		
 					        	  // reset the old button highlighted color
 							     // check if its last button
 					             int lastBtn = leftPanelBtns.get(curLeft_rowPos).size()-1;	 
@@ -728,8 +852,7 @@ public class CreateMainGUI extends JFrame{
 					            	 leftPanelBtns.get(curLeft_rowPos).get(curLeft_colPos).setBorder(null);
 					             }
 							     
-							     leftPanelBtns.get(curLeft_rowPos).get(curLeft_colPos).setForeground(Color.BLACK);
-							    	
+	
 							     // set colors for both top panel and left panel
 					        	 topPaint.setHighlight(colValue, rowValue, null, 0);
 							     leftPanelBtns.get(rowValue).get(colValue).setBorder(BorderFactory.createMatteBorder(
@@ -737,10 +860,12 @@ public class CreateMainGUI extends JFrame{
 							     
 							     newSchedPressed = false;
 					        	 remove(leftPanel, rowValue, colValue, leftPanelBtns);
-	 
+					        	 
 					        	 // assign new current button highlighted
 					        	 curLeft_rowPos = rowValue;
 					        	 curLeft_colPos = colValue;
+					        	 
+					        	 leftPanelBtns.get(curLeft_rowPos).get(curLeft_colPos).setForeground(Color.BLACK);
 					        	 }
 
 					        	 
@@ -764,14 +889,67 @@ public class CreateMainGUI extends JFrame{
 					        					        	
 					        	// try highlighting text
 					        	try{
-						        	
+						        	//System.out.println("Trying to highlight TExt!!");
 					        		JTextArea tempJTextArea = new JTextArea();
 					        	    String transTemp = transitions.getStyledDocument().getText(0, transitions.getStyledDocument().getLength());
 					        	    tempJTextArea.setText(transTemp);
 					        		transitions.getHighlighter().removeAllHighlights();
 					        		programInfo[currentLineProgramIndex].getHighlighter().removeAllHighlights(); 
-					        		 
-					        	    if(curLeft_colPos != transition_Num_org.get(curLeft_rowPos)){
+					        		
+					        		
+					        		if(curLeft_colPos == (leftPanelBtns.get(curLeft_rowPos).size()-1)){
+					        			
+										tempJTextArea = new JTextArea();
+										try{
+											
+											transTemp = transitions.getStyledDocument().getText(0, transitions.getStyledDocument().getLength());
+											tempJTextArea.setText(transTemp);
+										//	System.out.println("IN Pressed: \n" + transTemp);
+						        	    
+						        	    
+										
+										// pattern to catch the thread numbers
+										Pattern threadPattern = Pattern.compile(".*Thread-([0-9]+)(.*)");
+										
+										// keeps track of the threads
+										int first = -1;
+										int second = -1; 
+											
+										// split lines to grep for thread numbers
+										String[] splitError = transTemp.split("\n");
+											
+										// match thread numbers
+										for(int j = 0; j < splitError.length; j++){
+											splitError[j] = splitError[j].trim();
+												
+											// matcher for final error
+										    Matcher threadError = threadPattern.matcher(splitError[j]);
+										    if(threadError.matches()){
+										    	if(first==-1){
+										    		first = Integer.parseInt(threadError.group(1));
+										    		
+										    		transitions.getHighlighter().addHighlight(  tempJTextArea.getLineStartOffset(j), tempJTextArea.getLineEndOffset(j), threadHighlighter[first] );
+										    		//System.out.println("first: " + first);
+										    	}
+										    	else{
+										    		second = Integer.parseInt(threadError.group(1));
+										    		transitions.getHighlighter().addHighlight( tempJTextArea.getLineStartOffset(j), tempJTextArea.getLineEndOffset(j), threadHighlighter[second] );
+										    		//System.out.println("second: " + second);	
+										    	}
+										    }
+										}
+										}
+										catch(Exception x){
+											
+										}
+					        			
+					        			
+					        			
+					        			
+					        			
+					        		}
+					        		
+					        		else if(curLeft_colPos != transition_Num_org.get(curLeft_rowPos)){
 					        	    	// check if the line is in a program
 					        	    	while(!programLineFound){					        		  
 					        		   
@@ -818,7 +996,11 @@ public class CreateMainGUI extends JFrame{
 					        		System.out.println("Bad Location: " + bl.toString());
 					        		tranistionInfoPos = -1;
 					        		nextTransition = true;
-					        		transitions.setText(transition_errors_org.get(curLeft_rowPos));
+					        		if(transition_states_info_org.get(curLeft_rowPos).get(curLeft_colPos).equals("JPF has no sources for bytecode executed (Most Likely from an External Library)")){
+					        			transitions.setText(transition_states_info_org.get(curLeft_rowPos).get(curLeft_colPos));
+		     						}else{
+		     							transitions.setText("JPF has no sources for bytecode executed (Most Likely from an External Library)");
+		     						}
 					        	}
 					        }
 					    }
@@ -839,11 +1021,52 @@ public class CreateMainGUI extends JFrame{
 		  
 		  leftPanelBtns.get(j).get(lastBtn).addActionListener(
 				  new ActionListener() {
-					  public void actionPerformed(ActionEvent e) {
-						  transitions.setText(transition_errors_cur.get(curTrace));
+					  public void actionPerformed(ActionEvent e) {						  
+						  transitions.setText(transition_errors_cur.get(curLeft_rowPos));
+
+							try{
+				        		JTextArea tempJTextArea = new JTextArea();
+				        	    String transTemp = transitions.getStyledDocument().getText(0, transitions.getStyledDocument().getLength());
+				        	    tempJTextArea.setText(transTemp);
+				        		transitions.getHighlighter().removeAllHighlights();
+				        		programInfo[currentLineProgramIndex].getHighlighter().removeAllHighlights(); 
+			        	    
+							// pattern to catch the thread numbers
+							Pattern threadPattern = Pattern.compile(".*Thread-([0-9]+)(.*)");
+							
+							// keeps track of the threads
+							int first = -1;
+							int second = -1; 
+								
+							// split lines to grep for thread numbers
+							String[] splitError = transTemp.split("\n");
+								
+							// match thread numbers
+							for(int j = 0; j < splitError.length; j++){
+								splitError[j] = splitError[j].trim();
+									
+								// matcher for final error
+							    Matcher threadError = threadPattern.matcher(splitError[j]);
+							    if(threadError.matches()){
+							    	if(first==-1){
+							    		first = Integer.parseInt(threadError.group(1));
+							    		transitions.getHighlighter().addHighlight(  tempJTextArea.getLineStartOffset(j), tempJTextArea.getLineEndOffset(j), threadHighlighter[first] );
+							    	}
+							    	else{
+							    		second = Integer.parseInt(threadError.group(1));
+							    		transitions.getHighlighter().addHighlight( tempJTextArea.getLineStartOffset(j), tempJTextArea.getLineEndOffset(j), threadHighlighter[second] );	
+							    	}
+							    }
+							}
+							}
+							catch(Exception x){
+								
+							}
+
 					  }
 				  }
 			);
+			
 		
 	    }
 		
@@ -1555,10 +1778,7 @@ public class CreateMainGUI extends JFrame{
 		}
 		System.out.println("\n");
 		*/
-		
-		
-		
-		
+
 		/*
 		 * Before we can start sorting, lets create a more precise error info structure:
 		 * Value of:
@@ -1700,9 +1920,6 @@ public class CreateMainGUI extends JFrame{
 			    	 }
 				}
 				
-			
-			
-			
 				 // set the original ordering of the data
 				Collections.copy(transition_errors_org, transition_errors_cur);
 				Collections.copy(transition_Num_org, transition_Num_cur);
@@ -1711,7 +1928,7 @@ public class CreateMainGUI extends JFrame{
 	}
 	
 	/*
-	 * This method generates similarity values for schedules
+	 * This method generates similarity: Classic values for schedules
 	 * - this values are based on the number of similar transitions a schedule has compared
 	 *   to the given target schedule 
 	 */
@@ -1799,7 +2016,7 @@ public class CreateMainGUI extends JFrame{
 	
 	/*
 	 * This method sorts the visualization data in
-	 * based on similarity
+	 * based on similarity: Classic
 	 * - Lets use Bubble Sort for now
 	 */
 	
@@ -1903,6 +2120,214 @@ public class CreateMainGUI extends JFrame{
 	}
 	
 	/*
+	 * This method sorts the visualization data in
+	 * based on similarity: Dependant
+	 * - Lets use Bubble Sort for now
+	 */
+	
+	
+	/*
+	 * This method generates similarity: Dependant values for schedules
+	 * - this values are based on the number of similar transitions a schedule has compared
+	 *   to the given target schedule 
+	 */
+	public void genSimilarityValuesDependant(int index){
+		String currentCheck = "";
+		System.out.println("Index: " + index);
+			
+		
+		//System.out.println("\n\nSize: "+ transition_states_info_org.get(scheduleID).size());
+		
+		// loop through the target schedule one transition at a time
+		/* 
+		 * Round 1 of Assigning Similarity values:
+		 *  - loop through all other schedules and assign values based on the number of similair transitions
+		 */
+		for(int cur = (transition_states_info_sim_depend.get(index).size() - 2); cur >= 0 ;cur-- ){
+			currentCheck = transition_states_info_sim_depend.get(index).get(cur);
+			//System.out.println("\n\n"+ currentCheck);
+			
+			
+			// go through each schedule
+			for(int i = index; i < trace_Num; i++){
+				
+				if(cur < transition_states_info_sim_depend.get(i).size()){
+					if(currentCheck.equals(transition_states_info_sim_depend.get(i).get(cur))){
+						// add +1 to the simalirity value score
+						similarity_depend_values.set(i, similarity_depend_values.get(i) + 1.0);
+						
+						// add +1 to similairity value if the same thread executes code
+						if(transition_states_sim_depend.get(index).get(cur) == transition_states_sim_depend.get(i).get(cur)){
+							similarity_depend_values.set(i, similarity_depend_values.get(i) + 1.0);
+						}
+						
+						break;
+					}
+				}
+
+			
+			}
+			
+		}
+		
+		
+		/* 
+		 * Round 2 of Assigning Similarity values:
+		 *  - loop through all other schedules and subtract 0.01*X from similarity scores, where X is
+		 *  the difference between the number of transitions of the schedule and the number
+		 *  of transitions of the target Schedule
+		 */
+		/*
+		int maxSchedScore = transition_Num_sim_depend.get(index);
+		for(int i = index; i < transition_errors_sim_depend.size(); i++ ){
+			double diffSchedTrans = transition_Num_sim_depend.get(i) - similarity_depend_values.get(i);
+			similarity_depend_values.set(i, similarity_depend_values.get(i) - (diffSchedTrans*0.075));	
+		}
+		*/
+		
+		
+		/* 
+		 * Round 3 of Assigning Similarity values:
+		 *  - loop through all other schedules and add 25 to all schedules with similiar bug types
+		 */
+		for(int i = index; i < transition_errorType_sim_depend.size(); i++ ){
+			if(transition_errorType_sim_depend.get(index).equals(transition_errorType_sim_depend.get(i))){
+				similarity_depend_values.set(i, similarity_depend_values.get(i) + 10);
+			}
+			if(transition_errors_sim_depend.get(index).equals(transition_errors_sim_depend.get(i))){
+				similarity_depend_values.set(i, similarity_depend_values.get(i) + 10);
+			}
+		}
+		
+		
+		// to make sorting a little easier we just give the target schedule a higher score 
+		similarity_depend_values.set(index, similarity_depend_values.get(index) + 1.0);
+		/*
+		// print similarity scores
+		System.out.println("Checking Against Schedule: " + index + "\n");
+		for(int i = 0; i < similarity_depend_values.size(); i++){
+			System.out.println("Schedule: " + i + "\tScore: " + similarity_depend_values.get(i));
+		}
+		*/
+
+	}
+	
+	public void sortSimilarityDependant(){
+		
+		// clear everything
+		transition_errors_sim_depend.clear();
+		transition_Num_sim_depend.clear();
+		transition_states_sim_depend.clear();
+		transition_states_info_sim_depend.clear();
+		realPositions_sim_depend.clear();
+		
+		similarity_depend_values.clear();
+		
+		// start by getting the values
+		for(int i = 0; i < transition_errors_org.size(); i++ ){
+					transition_errors_sim_depend.add("");
+					transition_errorType_sim_depend.add("");
+					transition_Num_sim_depend.add(0);
+					transition_states_sim_depend.add(new ArrayList<Integer>());
+					transition_states_info_sim_depend.add(new ArrayList<String>());
+					realPositions_sim_depend.add(i + 1);
+		}
+				
+		// copy original ordering of the data
+		Collections.copy(transition_errors_sim_depend, transition_errors_org);
+		Collections.copy(transition_errorType_sim_depend, transition_errorType_org);
+		Collections.copy(transition_Num_sim_depend, transition_Num_org);
+		Collections.copy(transition_states_sim_depend, transition_states_org);
+		Collections.copy(transition_states_info_sim_depend, transition_states_info_org);
+		
+		// Print the List before the sort
+		/*
+		System.out.print("Not Sorted: ");
+		for(int i = 0; i < transition_Num_asc.size(); i++){
+			System.out.print(transition_Num_asc.get(i) + ", " );
+			
+		}
+		System.out.println("\n");
+		*/
+		
+		//System.out.println("Sort Start");
+		
+		for(int index = 0; index < trace_Num; index++){
+			
+			// 1. initialize Similarity Values
+			for(int i = index; i < transition_errors_org.size(); i++ ){
+				similarity_depend_values.add(0.00);
+			}	
+
+			// 2. Start by Generating the Similarity Value For Index
+			genSimilarityValuesDependant(index);
+	
+			// 3. Sort The List and Update the new Positions
+			boolean notSorted = true;
+			while(notSorted){
+			
+				notSorted = false;
+				for(int i = index; i < similarity_depend_values.size() - 1; i++){
+					if(similarity_depend_values.get(i) < similarity_depend_values.get(i+1)){
+					
+						// switch similarity_values
+						double tempValue = similarity_depend_values.get(i);
+						similarity_depend_values.set(i, similarity_depend_values.get(i+1));
+						similarity_depend_values.set(i+1, tempValue);
+						notSorted = true;
+					
+					
+						// switch transition Numbers
+						int temp = transition_Num_sim_depend.get(i);
+						transition_Num_sim_depend.set(i, transition_Num_sim_depend.get(i+1));
+						transition_Num_sim_depend.set(i+1, temp);
+					
+					
+						// switch transition info
+						List<Integer> tempStates = transition_states_sim_depend.get(i);
+						transition_states_sim_depend.set(i, transition_states_sim_depend.get(i+1));
+						transition_states_sim_depend.set(i+1, tempStates);
+					
+						// switch transition info states
+						List<String> tempStatesInfo = transition_states_info_sim_depend.get(i);
+						transition_states_info_sim_depend.set(i, transition_states_info_sim_depend.get(i+1));
+						transition_states_info_sim_depend.set(i+1, tempStatesInfo);
+					
+						// switch transition errors
+						String tempErrs = transition_errors_sim_depend.get(i);
+						transition_errors_sim_depend.set(i, transition_errors_sim_depend.get(i+1));
+						transition_errors_sim_depend.set(i+1, tempErrs);
+					
+						// switch the real Position values
+						int tempPos = realPositions_sim_depend.get(i);
+						realPositions_sim_depend.set(i, realPositions_sim_depend.get(i+1));
+						realPositions_sim_depend.set(i+1, tempPos);
+					}
+					
+				}
+			
+			}
+
+			System.out.println("Sort Finished --> Index: " + index);
+			
+			for(int i = (index+1); i < transition_errors_org.size(); i++ ){
+				similarity_depend_values.remove(similarity_depend_values.size() - 1);
+			}
+		}
+		// Print the List after the sort
+		
+		System.out.print("Sorted: ");
+		for(int i = 0; i < similarity_depend_values.size(); i++){
+			System.out.print(similarity_depend_values.get(i) + ", " );
+			
+		}
+		System.out.println("\n");
+		
+		
+	}
+	
+	
+	/*
 	 * This method calculates:
 	 *      - the interactions of two specific threads that cause an error (percentage)
 	 *      - example:
@@ -1932,11 +2357,15 @@ public class CreateMainGUI extends JFrame{
 			}
 		}
 		
+		System.out.println("This Far");
 		// pattern to catch the thread numbers
-		Pattern threadPattern = Pattern.compile(".*Thread-([0-9]+).*");
+		Pattern threadPattern = Pattern.compile(".*Thread-([0-9]+)(.*)");
 		
 		// Step 1:
+		
+		System.out.println("transition_errors_org SIZE: " + transition_errors_org.size());
 		for(int i = 0; i < transition_errors_org.size(); i++){
+			
 			// keeps track of the threads
 			first = -1;
 			second = -1; 
@@ -1946,10 +2375,11 @@ public class CreateMainGUI extends JFrame{
 			
 			// match thread numbers
 			for(int j = 0; j < splitError.length; j++){
+				splitError[j] = splitError[j].trim();
+				
 				// matcher for final error
 		    	Matcher threadError = threadPattern.matcher(splitError[j]);
 		    	if(threadError.matches()){
-		    		
 		    		if(first==-1){
 		    			first = Integer.parseInt(threadError.group(1));
 		    			
@@ -1960,7 +2390,7 @@ public class CreateMainGUI extends JFrame{
 		    		}
 		    	}
 			}
-			
+		
 			threadErrorValue[first][second] += 1;
      		//System.out.println("First: " + first + "\tSecond: " + second);	    	
 		}
@@ -1981,7 +2411,6 @@ public class CreateMainGUI extends JFrame{
 		}
 		
 		// print them out
-		/*
 		System.out.println("------------ ERROR PERCENTAGES --------");
 		for(int i = 0; i < threadErrorPercentage.length; i++){
 			for(int j = 0; j < threadErrorPercentage[i].length; j++){
@@ -1989,9 +2418,8 @@ public class CreateMainGUI extends JFrame{
 					System.out.println("\tThread-"+ i+ " and Thread-" +j + ": " + threadErrorPercentage[i][j] + "%");
 				}
 			}
-			
 		}
-		*/
+		
 		
 	}
 
