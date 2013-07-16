@@ -1278,7 +1278,7 @@ public class CreateMainGUI extends JFrame{
 		stepThroughBtnLbl.setTitleColor(Color.black);
         
 		Font curFontA = stepThroughBtnLbl.getTitleFont();
-		stepThroughBtnLbl.setTitleFont(new Font(curFontA.getFontName(), curFontA.getStyle(), 14));
+		//stepThroughBtnLbl.setTitleFont(new Font(curFontA.getFontName(), curFontA.getStyle(), 14));
         
 		stepThroughPaneBtns.setBorder(stepThroughBtnLbl);
 		
@@ -1286,7 +1286,7 @@ public class CreateMainGUI extends JFrame{
 		d.gridx = 0;
 		d.gridy = 0;
 		stepThroughCurrentSched = new JLabel("Schedule: N/A");
-		stepThroughCurrentSched.setFont(font);
+		//stepThroughCurrentSched.setFont(font);
 		stepThroughPaneInfo.add(stepThroughCurrentSched, d);
 		
 		// add filler
@@ -1298,7 +1298,7 @@ public class CreateMainGUI extends JFrame{
 		d.gridx = 12;
 		d.gridy = 0;
 		stepThroughCurrentTransition = new JLabel("Transition: N/A");
-		stepThroughCurrentTransition.setFont(font);
+		//stepThroughCurrentTransition.setFont(font);
 		stepThroughPaneInfo.add(stepThroughCurrentTransition, d);
 		
         // Progress Bar    
@@ -1311,7 +1311,7 @@ public class CreateMainGUI extends JFrame{
         JLabel progressLabel = new JLabel("Progress: ");
 		d.gridx = 24;
 		d.gridy = 0;
-		progressLabel.setFont(font);
+		//progressLabel.setFont(font);
 		stepThroughPaneInfo.add(progressLabel, d);
 		
         progressBar = new JProgressBar(0, 1000);
@@ -1365,8 +1365,8 @@ public class CreateMainGUI extends JFrame{
                 TitledBorder.CENTER);
 		stepThroughInfoLbl.setTitleColor(Color.black);
         
-		Font curFontB = stepThroughInfoLbl.getTitleFont();
-		stepThroughInfoLbl.setTitleFont(new Font(curFontB.getFontName(), curFontB.getStyle(), 14));
+		//Font curFontB = stepThroughInfoLbl.getTitleFont();
+		//stepThroughInfoLbl.setTitleFont(new Font(curFontB.getFontName(), curFontB.getStyle(), 14));
         
 		stepThroughPaneInfo.setBorder(stepThroughInfoLbl);	
 		
@@ -1382,7 +1382,7 @@ public class CreateMainGUI extends JFrame{
                 TitledBorder.BELOW_TOP);
 		stepThroughMainLbl.setTitleColor(Color.black);
    
-		stepThroughMainLbl.setTitleFont(font);
+		//stepThroughMainLbl.setTitleFont(font);
         
         stepThroughPane.setBorder(stepThroughMainLbl);
         
