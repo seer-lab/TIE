@@ -1,5 +1,5 @@
 # TIE - Thread Interleaving Visualizer
-# A Java PathFinder (JPF) Extension
+_A Java PathFinder (JPF) Extension_
 
 Gowritharan Maheswara, Jeremy S. Bradbury, Christopher Collins
 Ontario Tech University
